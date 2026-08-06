@@ -1,0 +1,12 @@
+{
+  "name": "Omkareswar Realtors",
+  "short_name": "Omkareswar",
+  "description": "Find the Right Property. Build Your Future.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFE",
+  "theme_color": "#90A955",
+  "icons": [
+    { "src": "/logo.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

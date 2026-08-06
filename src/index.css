@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f4f7ec;
+  --color-brand-100: #e6edd3;
+  --color-brand-200: #cfdcae;
+  --color-brand-300: #b3c885;
+  --color-brand-400: #9fbb69;
+  --color-brand-500: #90a955;
+  --color-brand-600: #748a42;
+  --color-brand-700: #556936;
+  --color-brand-800: #3f5b25;
+  --color-brand-900: #2e4419;
+
+  --color-warm-white: #fffffe;
+
+  --font-sans: "Inter", "Noto Sans Telugu", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-warm-white);
+  color: #1f2a12;
+  font-family: var(--font-sans);
+}
+
+/* Visible keyboard focus everywhere */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Hide scrollbar for horizontal mobile strips, keep it scrollable */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.lang-te {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Omkareswar Realtors",
+  "description": "Real estate portal for property listings, buyers, sellers, mediators, employees, and admins.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
