@@ -80,6 +80,7 @@ const AdminRegistrations = lazy(() => import('../pages/admin/Registrations'));
 const AdminUsers = lazy(() => import('../pages/admin/Users'));
 const AdminEmployees = lazy(() => import('../pages/admin/Employees'));
 const AdminProperties = lazy(() => import('../pages/admin/Properties'));
+const AdminAddProperty = lazy(() => import('../pages/seller/AddProperty'));
 const AdminCategories = lazy(() => import('../pages/admin/Categories'));
 const AdminMediaRules = lazy(() => import('../pages/admin/MediaRules'));
 const AdminCms = lazy(() => import('../pages/admin/Cms'));
@@ -228,6 +229,7 @@ export default function AppRoutes() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="employees" element={<AdminEmployees />} />
           <Route path="properties" element={<AdminProperties />} />
+          <Route path="properties/new" element={<AdminAddProperty />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="media-rules" element={<AdminMediaRules />} />
           <Route path="cms" element={<AdminCms />} />

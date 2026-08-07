@@ -181,6 +181,16 @@ async function deleteProperty(id) {
   return unwrap(response);
 }
 
+async function toggleFeatured(id, featured) {
+  const response = await apiClient.patch(`/admin/properties/${id}/feature`, { featured });
+  return unwrap(response);
+}
+
+async function toggleVerified(id, verified) {
+  const response = await apiClient.patch(`/admin/properties/${id}/verify`, { verified });
+  return unwrap(response);
+}
+
 async function assignRecord(id, data = {}) {
   const response = await apiClient.patch(`/properties/${id}/assign`, data);
   return unwrap(response);
@@ -233,6 +243,8 @@ export const propertyService = {
   getBySeller,
   moderate,
   deleteProperty,
+  toggleFeatured,
+  toggleVerified,
   assignRecord,
   isUsedByAnyProperty,
   getActiveListingsValue,

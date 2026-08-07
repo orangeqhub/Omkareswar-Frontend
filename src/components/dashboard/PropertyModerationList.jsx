@@ -46,6 +46,39 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
     load();
   }
 
+  async function handleDelete(id) {
+    try {
+      await propertyService.deleteProperty(id);
+      toast.success(t('toast.propertyDeleted', { ns: 'dashboard', defaultValue: 'Property deleted successfully' }));
+      load();
+    } catch (err) {
+      console.error('Failed to delete property:', err);
+      toast.error(err.message || 'Failed to delete property');
+    }
+  }
+
+  async function handleToggleFeatured(id, featured) {
+    try {
+      await propertyService.toggleFeatured(id, featured);
+      toast.success(t('toast.propertyUpdated', { ns: 'dashboard' }));
+      load();
+    } catch (err) {
+      console.error('Failed to toggle featured status:', err);
+      toast.error(err.message || 'Failed to update featured status');
+    }
+  }
+
+  async function handleToggleVerified(id, verified) {
+    try {
+      await propertyService.toggleVerified(id, verified);
+      toast.success(t('toast.propertyUpdated', { ns: 'dashboard' }));
+      load();
+    } catch (err) {
+      console.error('Failed to toggle verified status:', err);
+      toast.error(err.message || 'Failed to update verified status');
+    }
+  }
+
   if (properties === null) return null;
   if (properties.length === 0) return <EmptyState titleKey="empty.noData" />;
 
@@ -67,17 +100,41 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {user?.role === 'admin' && (
-                <select
-                  aria-label={t('assignment.assignEmployee', { ns: 'dashboard' })}
-                  value={p.assignedEmployeeId || ''}
-                  onChange={(e) => handleAssign(p.id, e.target.value)}
-                  className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs"
-                >
-                  <option value="">{t('assignment.unassigned', { ns: 'dashboard' })}</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    aria-label={t('assignment.assignEmployee', { ns: 'dashboard' })}
+                    value={p.assignedEmployeeId || ''}
+                    onChange={(e) => handleAssign(p.id, e.target.value)}
+                    className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs"
+                  >
+                    <option value="">{t('assignment.unassigned', { ns: 'dashboard' })}</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeatured(p.id, !p.featured)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all ${
+                      p.featured
+                        ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {p.featured ? '★ Featured' : '☆ Feature'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleVerified(p.id, !p.verified)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all ${
+                      p.verified
+                        ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {p.verified ? '✓ Verified' : '○ Verify'}
+                  </button>
+                </>
               )}
               <button type="button" onClick={() => handleAction(p.id, 'approve')} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-warm-white">
                 {t('buttons.approve')}
@@ -88,6 +145,19 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
               <button type="button" onClick={() => setNoteFor({ id: p.id, action: 'reject' })} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-semibold text-red-600">
                 {t('buttons.reject')}
               </button>
+              {user?.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(t('confirm.deleteProperty', { ns: 'dashboard', defaultValue: 'Are you sure you want to delete this property?' }))) {
+                      handleDelete(p.id);
+                    }
+                  }}
+                  className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                >
+                  {t('buttons.delete', { ns: 'common', defaultValue: 'Delete' })}
+                </button>
+              )}
             </div>
           </div>
         );

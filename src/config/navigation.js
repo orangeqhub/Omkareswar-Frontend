@@ -50,6 +50,7 @@ export const DASHBOARD_NAV = {
     { key: 'users', path: '/admin/users', labelKey: 'nav.users', icon: 'Users' },
     { key: 'employees', path: '/admin/employees', labelKey: 'nav.employees', icon: 'IdCard' },
     { key: 'properties', path: '/admin/properties', labelKey: 'nav.properties', icon: 'Building2' },
+    { key: 'new-property', path: '/admin/properties/new', labelKey: 'nav.addProperty', icon: 'PlusSquare' },
     { key: 'categories', path: '/admin/categories', labelKey: 'nav.categories', icon: 'Tags' },
     { key: 'media-rules', path: '/admin/media-rules', labelKey: 'nav.mediaRules', icon: 'ImagePlus' },
     { key: 'cms', path: '/admin/cms', labelKey: 'nav.cms', icon: 'FileText' },

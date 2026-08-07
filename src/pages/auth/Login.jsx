@@ -126,8 +126,12 @@ export default function Login() {
 
       setUser(user);
 
-      const destination =
-        location.state?.from || '/';
+      let destination = location.state?.from || '/';
+      if (destination === '/') {
+        if (user.role === 'admin') destination = '/admin/dashboard';
+        else if (user.role === 'employee') destination = '/employee/dashboard';
+        else destination = '/';
+      }
 
       navigate(destination, {
         replace: true,

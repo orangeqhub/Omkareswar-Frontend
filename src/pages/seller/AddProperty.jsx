@@ -46,6 +46,8 @@ const POST_SUBMIT_PATH = {
   buyer: '/buyer/my-properties',
   seller: '/seller/properties',
   mediator: '/mediator/dashboard',
+  admin: '/admin/properties',
+  employee: '/employee/properties',
 };
 
 export default function AddProperty() {
