@@ -123,7 +123,7 @@ export default function Footer() {
       <div className="border-t border-brand-800 px-4 py-3">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
           <p className="text-center text-xs text-brand-300 sm:text-left">
-            &copy; {new Date().getFullYear()} {t('brand.name')}. {t('footer.rights')}
+            &copy; {new Date().getFullYear()} ORANGE QUANTUM HUB PVT LTD . All rights reserved.
           </p>
           <div className="flex items-center gap-2">
             {socialLinks.map(({ icon: Icon, label, href }) => {
