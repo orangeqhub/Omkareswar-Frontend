@@ -199,10 +199,7 @@ export default function Login() {
               : t('login.requestOtp')}
           </button>
 
-          <p className="text-center text-xs text-gray-400">
-            Demo accounts: 9000000003 Seller,
-            9000000004 Buyer, 9000000005 Mediator
-          </p>
+
         </form>
       ) : (
         <form
