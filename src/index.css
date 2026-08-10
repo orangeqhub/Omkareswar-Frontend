@@ -53,3 +53,14 @@ textarea:focus-visible,
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
+
+/* Fix position: sticky for iOS Safari and prevent lag */
+header.sticky-header {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform;
+}

@@ -15,7 +15,7 @@ export default function LanguageToggle({ className = '' }) {
       <Languages size={16} />
       <span className={language === 'en' ? 'font-semibold' : ''}>EN</span>
       <span aria-hidden="true">/</span>
-      <span className={`lang-te ${language === 'te' ? 'font-semibold' : ''}`}>తెలుగు</span>
+      <span className={`lang-te ${language === 'te' ? 'font-semibold' : ''}`}>తె</span>
     </button>
   );
 }

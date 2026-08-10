@@ -8,12 +8,36 @@ const FACINGS = ['North', 'South', 'East', 'West', 'North-East', 'North-West', '
 const MAX_PRICE = 20000000;
 const MAX_AREA = 5000;
 
-export default function FilterPanel({ filters, onChange, onReset, hideCategory }) {
+const RESIDENTIAL_SLUGS = [
+  'apartments',
+  'independent-houses',
+  'gated-communities',
+  'flats',
+  'villas'
+];
+
+export function isResidentialCategory(slug) {
+  return RESIDENTIAL_SLUGS.includes(slug);
+}
+
+export default function FilterPanel({ filters, onChange, onReset, hideCategory, selectedCategorySlug }) {
   const { t } = useTranslation('properties');
   const language = useLanguageStore((s) => s.language);
 
+  const activeCategory = selectedCategorySlug || filters.categorySlug;
+  const showRoomFilters = isResidentialCategory(activeCategory);
+
   function set(patch) {
-    onChange({ ...filters, ...patch });
+    const nextFilters = { ...filters, ...patch };
+    const nextCategory = selectedCategorySlug || nextFilters.categorySlug;
+
+    if (!isResidentialCategory(nextCategory)) {
+      delete nextFilters.bedrooms;
+      delete nextFilters.bathrooms;
+      delete nextFilters.furnishing;
+    }
+
+    onChange(nextFilters);
   }
 
   return (
@@ -86,40 +110,42 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory }
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="filter-bedrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
-            {t('filters.bedrooms')}
-          </label>
-          <select
-            id="filter-bedrooms"
-            value={filters.bedrooms || ''}
-            onChange={(e) => set({ bedrooms: e.target.value || undefined })}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            <option value="">{t('filters.any')}</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n}+</option>
-            ))}
-          </select>
+      {showRoomFilters && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="filter-bedrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {t('filters.bedrooms')}
+            </label>
+            <select
+              id="filter-bedrooms"
+              value={filters.bedrooms || ''}
+              onChange={(e) => set({ bedrooms: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+              <option value="">{t('filters.any')}</option>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>{n}+</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="filter-bathrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {t('filters.bathrooms')}
+            </label>
+            <select
+              id="filter-bathrooms"
+              value={filters.bathrooms || ''}
+              onChange={(e) => set({ bathrooms: e.target.value ? Number(e.target.value) : undefined })}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            >
+              <option value="">{t('filters.any')}</option>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>{n}+</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label htmlFor="filter-bathrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
-            {t('filters.bathrooms')}
-          </label>
-          <select
-            id="filter-bathrooms"
-            value={filters.bathrooms || ''}
-            onChange={(e) => set({ bathrooms: e.target.value || undefined })}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            <option value="">{t('filters.any')}</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n}+</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      )}
 
       <div>
         <label htmlFor="filter-facing" className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -138,22 +164,24 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory }
         </select>
       </div>
 
-      <div>
-        <label htmlFor="filter-furnishing" className="mb-1.5 block text-sm font-medium text-gray-700">
-          {t('filters.furnishing')}
-        </label>
-        <select
-          id="filter-furnishing"
-          value={filters.furnishing || ''}
-          onChange={(e) => set({ furnishing: e.target.value || undefined })}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-        >
-          <option value="">{t('filters.any')}</option>
-          <option value="furnished">Furnished</option>
-          <option value="semi">Semi-furnished</option>
-          <option value="unfurnished">Unfurnished</option>
-        </select>
-      </div>
+      {showRoomFilters && (
+        <div>
+          <label htmlFor="filter-furnishing" className="mb-1.5 block text-sm font-medium text-gray-700">
+            {t('filters.furnishing')}
+          </label>
+          <select
+            id="filter-furnishing"
+            value={filters.furnishing || ''}
+            onChange={(e) => set({ furnishing: e.target.value || undefined })}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option value="">{t('filters.any')}</option>
+            <option value="furnished">Furnished</option>
+            <option value="semi">Semi-furnished</option>
+            <option value="unfurnished">Unfurnished</option>
+          </select>
+        </div>
+      )}
 
       <div>
         <span className="mb-1.5 block text-sm font-medium text-gray-700">{t('filters.featuredOrVerified')}</span>

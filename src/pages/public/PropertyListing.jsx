@@ -9,7 +9,7 @@ import { useLocationStore } from '../../store/locationStore';
 import { useUserLocationStore } from '../../store/userLocationStore';
 import { haversineDistanceKm, getPropertyCoordinates } from '../../utils/geo';
 import PropertyCard from '../../components/properties/PropertyCard';
-import FilterPanel from '../../components/properties/FilterPanel';
+import FilterPanel, { isResidentialCategory } from '../../components/properties/FilterPanel';
 import MobileFilterDrawer from '../../components/properties/MobileFilterDrawer';
 import { PropertyCardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
@@ -20,20 +20,57 @@ export default function PropertyListing({ forcedCategorySlug }) {
   const { t } = useTranslation('properties');
   const { categorySlug: routeCategorySlug } = useParams();
   const categorySlug = forcedCategorySlug || routeCategorySlug;
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const language = useLanguageStore((s) => s.language);
   const selectedLocation = useLocationStore((s) => s.selectedLocation);
   const userCoords = useUserLocationStore((s) => s.coords);
   const geoStatus = useUserLocationStore((s) => s.status);
   const category = categorySlug ? getCategoryBySlug(categorySlug) : null;
 
-  const [filters, setFilters] = useState(() => ({
-    city: searchParams.get('city') || selectedLocation || undefined,
-    transactionType: searchParams.get('transactionType') || undefined,
-    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-    search: searchParams.get('search') || undefined,
-  }));
+  const [filters, setFilters] = useState(() => {
+    const slug = searchParams.get('categorySlug') || undefined;
+    const isRes = slug ? isResidentialCategory(slug) : false;
+
+    return {
+      city: searchParams.get('city') || selectedLocation || undefined,
+      transactionType: searchParams.get('transactionType') || undefined,
+      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
+      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+      search: searchParams.get('search') || undefined,
+      categorySlug: slug,
+      bedrooms: isRes && searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
+      bathrooms: isRes && searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : undefined,
+      furnishing: isRes && searchParams.get('furnishing') || undefined,
+    };
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    let changed = false;
+
+    const allKeys = ['city', 'transactionType', 'minPrice', 'maxPrice', 'search', 'bedrooms', 'bathrooms', 'furnishing', 'categorySlug'];
+
+    allKeys.forEach((key) => {
+      const valInFilters = filters[key];
+      const valInParams = params.get(key);
+
+      if (valInFilters !== undefined && valInFilters !== null && valInFilters !== '') {
+        if (valInParams !== String(valInFilters)) {
+          params.set(key, String(valInFilters));
+          changed = true;
+        }
+      } else {
+        if (params.has(key)) {
+          params.delete(key);
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [filters, searchParams, setSearchParams]);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -105,7 +142,13 @@ export default function PropertyListing({ forcedCategorySlug }) {
         <aside className="hidden lg:block">
           <div className="sticky top-20 rounded-xl border border-gray-200 p-4">
             <h2 className="mb-4 font-semibold text-brand-800">{t('filters.title')}</h2>
-            <FilterPanel filters={filters} onChange={setFilters} onReset={handleReset} hideCategory={Boolean(category)} />
+            <FilterPanel
+              filters={filters}
+              onChange={setFilters}
+              onReset={handleReset}
+              hideCategory={Boolean(category)}
+              selectedCategorySlug={category ? category.slug : filters.categorySlug}
+            />
           </div>
         </aside>
 
@@ -167,6 +210,7 @@ export default function PropertyListing({ forcedCategorySlug }) {
         onChange={setFilters}
         onReset={handleReset}
         hideCategory={Boolean(category)}
+        selectedCategorySlug={category ? category.slug : filters.categorySlug}
       />
     </div>
   );

@@ -40,9 +40,9 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-warm-white/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-        <Link to="/" className="flex shrink-0 items-center gap-2">
+    <header className="sticky-header border-b border-gray-100 bg-warm-white/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-2.5">
+        <Link to="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {logoError ? (
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 font-bold text-warm-white sm:h-11 sm:w-11">
               OR
@@ -57,7 +57,7 @@ export default function Navbar() {
               />
             </span>
           )}
-          <span className="hidden truncate text-base font-bold text-brand-800 min-[420px]:inline sm:text-lg">
+          <span className="hidden truncate text-base font-bold text-brand-800 sm:inline sm:text-lg">
             {t('brand.name')}
           </span>
         </Link>
@@ -118,13 +118,14 @@ export default function Navbar() {
           <LanguageToggle className="shrink-0" />
         </div>
 
-        <div className="flex items-center gap-1.5 lg:hidden">
+        <div className="flex items-center gap-1 sm:gap-1.5 lg:hidden">
           <button
             type="button"
             onClick={handleSell}
-            className="flex items-center gap-1 whitespace-nowrap rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-warm-white hover:bg-brand-700"
+            className="flex items-center gap-1 whitespace-nowrap rounded-full bg-brand-600 px-2.5 py-1.5 text-xs font-bold text-warm-white hover:bg-brand-700 sm:px-3"
           >
-            <Tag size={13} /> {t('nav.sell')}
+            <Tag size={13} />
+            <span className="hidden min-[360px]:inline">{t('nav.sell')}</span>
           </button>
           <Link
             to="/wishlist"
