@@ -17,6 +17,7 @@ export default function Visits() {
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [unassignedOnly, setUnassignedOnly] = useState(false);
   const [modalRecord, setModalRecord] = useState(null);
+  const [pendingFilter, setPendingFilter] = useState(false);
 
   function load() {
     visitService.getAllVisits().then(setVisits);
@@ -30,6 +31,7 @@ export default function Visits() {
   const employeeName = (id) => employees.find((e) => e.id === id)?.name;
 
   const filtered = visits.filter((v) => {
+    if (pendingFilter) return v.status === 'pending_approval';
     if (unassignedOnly) return !v.assignedEmployeeId;
     if (employeeFilter) return v.assignedEmployeeId === employeeFilter;
     return true;
@@ -46,6 +48,26 @@ export default function Visits() {
       load();
     } catch (err) {
       toast.error(t(err.message, { ns: 'dashboard' }));
+    }
+  }
+
+  async function handleApprove(id) {
+    try {
+      await visitService.approveVisit(id);
+      toast.success('Visit approved successfully');
+      load();
+    } catch (err) {
+      toast.error(err.message || 'Failed to approve visit');
+    }
+  }
+
+  async function handleReject(id) {
+    try {
+      await visitService.rejectVisit(id, 'Rejected by admin');
+      toast.success('Visit rejected');
+      load();
+    } catch (err) {
+      toast.error(err.message || 'Failed to reject visit');
     }
   }
 
@@ -78,9 +100,21 @@ export default function Visits() {
             onChange={(e) => {
               setUnassignedOnly(e.target.checked);
               if (e.target.checked) setEmployeeFilter('');
+              setPendingFilter(false);
             }}
           />
           {t('filters.unassignedOnly', { ns: 'dashboard' })}
+        </label>
+        <label className="flex items-center gap-2 pb-1.5 text-sm text-amber-600 font-medium">
+          <input
+            type="checkbox"
+            checked={pendingFilter}
+            onChange={(e) => {
+              setPendingFilter(e.target.checked);
+              if (e.target.checked) { setEmployeeFilter(''); setUnassignedOnly(false); }
+            }}
+          />
+          Pending Approval ({visits.filter((v) => v.status === 'pending_approval').length})
         </label>
       </div>
 
@@ -114,13 +148,34 @@ export default function Visits() {
                   <td className="px-4 py-3 capitalize">{v.assignmentStatus || 'unassigned'}</td>
                   <td className="px-4 py-3">{v.assignedAt ? new Date(v.assignedAt).toLocaleString() : '-'}</td>
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => setModalRecord(v)}
-                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
-                    >
-                      {v.assignedEmployeeId ? t('assignment.reassignEmployee', { ns: 'dashboard' }) : t('assignment.assignEmployee', { ns: 'dashboard' })}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {v.status === 'pending_approval' ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(v.id)}
+                            className="rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReject(v.id)}
+                            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setModalRecord(v)}
+                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-50"
+                        >
+                          {v.assignedEmployeeId ? t('assignment.reassignEmployee', { ns: 'dashboard' }) : t('assignment.assignEmployee', { ns: 'dashboard' })}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

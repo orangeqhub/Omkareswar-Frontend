@@ -20,7 +20,7 @@ export default function Interests() {
         if (p) map[e.propertyId] = p;
       }
       setProperties(map);
-    });
+    }).catch(() => {});
   }, [user]);
 
   if (interests.length === 0) return <EmptyState titleKey="empty.noData" />;

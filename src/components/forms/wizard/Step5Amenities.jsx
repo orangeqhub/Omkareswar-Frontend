@@ -6,13 +6,17 @@ const AMENITIES = [
   'Street Lighting', 'Underground Drainage', 'Avenue Plantation', 'Water Supply',
 ];
 
-export default function Step5Amenities({ data, onChange }) {
+export default function Step5Amenities({ data, onChange, fieldConfig = {} }) {
   const { t } = useTranslation('forms');
+
+  const amenitiesEnabled = fieldConfig.amenities ? fieldConfig.amenities.enabled !== false : true;
 
   function toggle(amenity) {
     const has = data.amenities.includes(amenity);
     onChange({ amenities: has ? data.amenities.filter((a) => a !== amenity) : [...data.amenities, amenity] });
   }
+
+  if (!amenitiesEnabled) return <p className="text-sm text-gray-400 italic py-4">Amenities section is disabled.</p>;
 
   return (
     <div>

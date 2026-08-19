@@ -41,7 +41,6 @@ export const PROFILE_MENU = {
   ],
   employee: [
     { key: 'dashboard', path: '/employee/dashboard', labelKey: 'profileMenu.dashboard', icon: 'LayoutDashboard' },
-    { key: 'assignedVerifications', path: '/employee/verifications', labelKey: 'profileMenu.assignedVerifications', icon: 'BadgeCheck' },
     { key: 'propertyModeration', path: '/employee/properties', labelKey: 'profileMenu.propertyModeration', icon: 'Building2' },
     { key: 'assignedEnquiries', path: '/employee/enquiries', labelKey: 'profileMenu.assignedEnquiries', icon: 'Inbox' },
     { key: 'visits', path: '/employee/visits', labelKey: 'profileMenu.visits', icon: 'CalendarCheck' },

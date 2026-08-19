@@ -20,6 +20,7 @@ export default function PropertyCard({ property }) {
   const language = useLanguageStore((s) => s.language);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(property.id));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const wishlistCount = useWishlistStore((s) => s.ids.length);
   const isComparing = useCompareStore((s) => s.isSelected(property.id));
   const toggleCompare = useCompareStore((s) => s.toggle);
 
@@ -30,7 +31,8 @@ export default function PropertyCard({ property }) {
   function handleWishlist(e) {
     e.preventDefault();
     const added = toggleWishlist(property.id);
-    toast.success(added ? t('card.addedToWishlist') : t('card.removedFromWishlist'));
+    const count = useWishlistStore.getState().ids.length;
+    toast.success(added ? `Wishlisted Property (${count})` : t('card.removedFromWishlist'));
   }
 
   function handleCompare(e) {
@@ -71,15 +73,22 @@ export default function PropertyCard({ property }) {
           )}
         </div>
         <div className="absolute right-2 top-2 flex flex-col gap-1.5">
-          <button
-            type="button"
-            onClick={handleWishlist}
-            aria-label={isWishlisted ? t('card.removeFromWishlist') : t('card.addToWishlist')}
-            aria-pressed={isWishlisted}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-warm-white/90 text-gray-600 shadow transition-transform hover:scale-110 hover:text-red-500"
-          >
-            <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className={isWishlisted ? 'text-red-500' : ''} />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={handleWishlist}
+              aria-label={isWishlisted ? t('card.removeFromWishlist') : t('card.addToWishlist')}
+              aria-pressed={isWishlisted}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-warm-white/90 text-gray-600 shadow transition-transform hover:scale-110 hover:text-red-500"
+            >
+              <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className={isWishlisted ? 'text-red-500' : ''} />
+            </button>
+            {isWishlisted && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold text-warm-white shadow">
+                {wishlistCount}
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleCompare}

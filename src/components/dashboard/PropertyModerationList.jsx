@@ -90,6 +90,7 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
           <div key={p.id} className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Link to={`/properties/${p.id}`} className="font-medium text-brand-800 hover:underline">{p.titleEn}</Link>
+              <p className="text-xs font-semibold text-brand-700">{p.propertyCode}</p>
               <p className="text-sm text-gray-500">{p.locationEn} &middot; ₹{Number(p.price || 0).toLocaleString('en-IN')} &middot; {t('detail.views', { count: p.views || 0, ns: 'properties' })}</p>
               <div className="mt-1"><StatusBadge status={p.status} /></div>
               <p className="mt-1 text-xs font-medium text-brand-700">
@@ -136,9 +137,27 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
                   </button>
                 </>
               )}
-              <button type="button" onClick={() => handleAction(p.id, 'approve')} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-warm-white">
-                {t('buttons.approve')}
-              </button>
+               <a
+                href={`/properties/${p.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 text-center"
+              >
+                View
+              </a>
+              {user?.role === 'admin' && (
+                <Link
+                  to={`/admin/properties/${p.id}/edit`}
+                  className="rounded-lg border border-brand-300 bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 hover:bg-brand-100 text-center"
+                >
+                  Edit
+                </Link>
+              )}
+              {statusFilter !== 'active' && (
+                <button type="button" onClick={() => handleAction(p.id, 'approve')} className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-warm-white">
+                  {t('buttons.approve')}
+                </button>
+              )}
               <button type="button" onClick={() => setNoteFor({ id: p.id, action: 'requestChanges' })} className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-semibold text-blue-700">
                 {t('modal.requestedChanges', { ns: 'dashboard' })}
               </button>

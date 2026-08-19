@@ -6,16 +6,22 @@ export function resolveMediaUrl(value) {
     return '';
   }
 
-  if (
-    value.startsWith('http://') ||
-    value.startsWith('https://') ||
-    value.startsWith('data:') ||
-    value.startsWith('blob:')
-  ) {
-    return value;
+  // Handle legacy DB paths missing /uploads/ due to older backend configuration
+  let cleanValue = value;
+  if (cleanValue.includes('/properties/') && !cleanValue.includes('/uploads/properties/')) {
+    cleanValue = cleanValue.replace('/properties/', '/uploads/properties/');
   }
 
-  const normalizedPath = value
+  if (
+    cleanValue.startsWith('http://') ||
+    cleanValue.startsWith('https://') ||
+    cleanValue.startsWith('data:') ||
+    cleanValue.startsWith('blob:')
+  ) {
+    return cleanValue;
+  }
+
+  const normalizedPath = cleanValue
     .replace(/^\/+/, '')
     .replace(/^uploads\/+/, '');
 

@@ -6,6 +6,7 @@ import { registrationService } from '../../services/registrationService';
 
 const STATUS_STYLE = {
   pending: { icon: Clock, className: 'text-amber-600 bg-amber-50' },
+  pending_review: { icon: Clock, className: 'text-amber-600 bg-amber-50' },
   approved: { icon: CheckCircle2, className: 'text-green-700 bg-green-50' },
   rejected: { icon: XCircle, className: 'text-red-600 bg-red-50' },
 };
@@ -61,7 +62,7 @@ export default function ApplicationStatus() {
         <div className={`mt-6 rounded-xl p-5 ${style.className}`}>
           <Icon size={28} />
           <p className="mt-3 text-sm">
-            {user.status === 'pending' && t('applicationStatus.pending')}
+            {(user.status === 'pending' || user.status === 'pending_review') && t('applicationStatus.pending')}
             {user.status === 'approved' && t('applicationStatus.approved', { memberId: user.memberId })}
             {user.status === 'rejected' && t('applicationStatus.rejected')}
           </p>

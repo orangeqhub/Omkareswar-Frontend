@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { generateImageSlots } from '../../../utils/mediaSlotGenerator';
-import { validateImageFile, readImageAsDataUrl } from '../../../utils/imageValidation';
-import { validateDocumentFile, readFileAsDataUrl } from '../../../utils/documentValidation';
+import { validateImageFile, compressImageToFile } from '../../../utils/imageValidation';
+import { validateDocumentFile } from '../../../utils/documentValidation';
+import apiClient from '../../../services/apiClient';
 import { resolveSlotLabel } from '../../../utils/mediaLabel';
 import { isBuildingType } from '../../../utils/wizardDefaults';
 import { mediaRuleService } from '../../../services/mediaRuleService';
@@ -48,8 +49,9 @@ export default function Step6Images({ data, onChange }) {
 
   async function handleUpload(slot, file) {
     const existingFingerprints = data.images.filter((i) => i.slotId !== slot.id).map((i) => i.fingerprint);
+    // Override maxFileSizeMb to 30 to support up to 30 MB raw size
     const result = validateImageFile(file, existingFingerprints, {
-      maxFileSizeMb: slot.maxFileSizeMb,
+      maxFileSizeMb: 30,
       allowedExtensions: slot.allowedExtensions,
     });
     if (!result.valid) {
@@ -58,11 +60,23 @@ export default function Step6Images({ data, onChange }) {
     }
     setErrors((e) => ({ ...e, [slot.id]: null }));
 
+    toast.info('Compressing and uploading image, please wait...');
+
     let url;
     try {
-      url = await readImageAsDataUrl(file);
-    } catch {
-      toast.error(t('media.error.readFailed'));
+      // Compress the image down to good quality on client side before upload
+      const compressedFile = await compressImageToFile(file, 1600, 1600, 0.8);
+      const fd = new FormData();
+      fd.append('file', compressedFile);
+      fd.append('slotId', slot.id);
+
+      const response = await apiClient.post('/uploads/property-image', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      url = response.data?.data?.url || response.data?.url;
+    } catch (err) {
+      console.error('Image compression/upload failed:', err);
+      toast.error('Failed to compress or upload image.');
       return;
     }
 
@@ -93,11 +107,21 @@ export default function Step6Images({ data, onChange }) {
     }
     setErrors((e) => ({ ...e, [kind]: null }));
 
+    toast.info('Uploading document, please wait...');
+
     let url;
     try {
-      url = await readFileAsDataUrl(file);
-    } catch {
-      toast.error(t('media.error.readFailed'));
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', kind);
+
+      const response = await apiClient.post('/uploads/property-document', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      url = response.data?.data?.url || response.data?.url;
+    } catch (err) {
+      console.error('Document upload failed:', err);
+      toast.error('Failed to upload document.');
       return;
     }
 

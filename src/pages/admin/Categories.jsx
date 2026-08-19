@@ -5,6 +5,8 @@ import { categoryService } from '../../services/categoryService';
 import { propertyService } from '../../services/propertyService';
 import { toast } from '../../store/toastStore';
 import EmptyState from '../../components/common/EmptyState';
+import apiClient from '../../services/apiClient';
+import { resolveMediaUrl } from '../../store/url';
 
 const AREA_UNITS = ['sqft', 'sqyd', 'acre', 'cent'];
 const TRANSACTION_TYPES = ['sale'];
@@ -33,6 +35,30 @@ export default function Categories() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm());
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    toast.info('Uploading category image...');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiClient.post('/uploads/property-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const url = res.data?.data?.url || res.data?.url;
+      setForm((f) => ({ ...f, image: url }));
+      toast.success('Category image uploaded successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to upload category image.');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function load() {
     categoryService.getCategories().then(setCategories);
@@ -117,7 +143,16 @@ export default function Categories() {
         <div className="space-y-3">
           {categories.map((c, i) => (
             <div key={c.slug} className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center">
-              {c.image && <img src={c.image} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />}
+              {c.image && c.image.trim() !== '' ? (
+                 <img
+                   src={resolveMediaUrl(c.image)}
+                   alt=""
+                   className="h-14 w-14 shrink-0 rounded-lg object-cover bg-gray-100"
+                   onError={(e) => {
+                     e.target.src = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=150&q=80';
+                   }}
+                 />
+               ) : null}
               <div className="flex-1">
                 <p className="font-medium text-gray-800">
                   {c.nameEn} <span className="lang-te ml-1 text-gray-500">/ {c.nameTe}</span>
@@ -169,39 +204,65 @@ export default function Categories() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="cat-nameEn" className="mb-1 block text-xs font-medium text-gray-600">{t('category.nameEn')}</label>
-                  <input id="cat-nameEn" required value={form.nameEn} onChange={(e) => setForm((f) => ({ ...f, nameEn: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <input id="cat-nameEn" required value={form.nameEn || ''} onChange={(e) => setForm((f) => ({ ...f, nameEn: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div>
                   <label htmlFor="cat-nameTe" className="mb-1 block text-xs font-medium text-gray-600">{t('category.nameTe')}</label>
-                  <input id="cat-nameTe" value={form.nameTe} onChange={(e) => setForm((f) => ({ ...f, nameTe: e.target.value }))} className="lang-te w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <input id="cat-nameTe" value={form.nameTe || ''} onChange={(e) => setForm((f) => ({ ...f, nameTe: e.target.value }))} className="lang-te w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="cat-descEn" className="mb-1 block text-xs font-medium text-gray-600">{t('category.descriptionEn')}</label>
-                  <textarea id="cat-descEn" rows={2} value={form.descriptionEn} onChange={(e) => setForm((f) => ({ ...f, descriptionEn: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <textarea id="cat-descEn" rows={2} value={form.descriptionEn || ''} onChange={(e) => setForm((f) => ({ ...f, descriptionEn: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div>
                   <label htmlFor="cat-descTe" className="mb-1 block text-xs font-medium text-gray-600">{t('category.descriptionTe')}</label>
-                  <textarea id="cat-descTe" rows={2} value={form.descriptionTe} onChange={(e) => setForm((f) => ({ ...f, descriptionTe: e.target.value }))} className="lang-te w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <textarea id="cat-descTe" rows={2} value={form.descriptionTe || ''} onChange={(e) => setForm((f) => ({ ...f, descriptionTe: e.target.value }))} className="lang-te w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
               </div>
 
               <div>
                 <label htmlFor="cat-slug" className="mb-1 block text-xs font-medium text-gray-600">{t('category.slug')}</label>
-                <input id="cat-slug" value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder={editing === 'new' ? 'auto-generated-from-name' : ''} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                <input id="cat-slug" value={form.slug || ''} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} placeholder={editing === 'new' ? 'auto-generated-from-name' : ''} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 <p className="mt-1 text-xs text-gray-400">{t('category.slugHint')}</p>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="cat-image" className="mb-1 block text-xs font-medium text-gray-600">{t('category.image')}</label>
-                  <input id="cat-image" value={form.image} onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <label htmlFor="cat-image-file" className="mb-1 block text-xs font-medium text-gray-600">Category Image</label>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      id="cat-image-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"
+                    />
+                    {form.image && (
+                      <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-1.5 pr-3">
+                        <img
+                          src={resolveMediaUrl(form.image)}
+                          alt="Category Thumbnail"
+                          className="h-8 w-8 rounded object-cover"
+                        />
+                        <span className="text-[10px] text-gray-500 truncate flex-1">{form.image.split('/').pop()}</span>
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, image: '' }))}
+                          className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
+                 <div>
                   <label htmlFor="cat-icon" className="mb-1 block text-xs font-medium text-gray-600">{t('category.icon')}</label>
-                  <input id="cat-icon" value={form.icon} onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))} placeholder="Home, Building2, LandPlot..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  <input id="cat-icon" value={form.icon || ''} onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))} placeholder="Home, Building2, LandPlot..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
               </div>
 
@@ -231,7 +292,7 @@ export default function Categories() {
 
               <div>
                 <label htmlFor="cat-fields" className="mb-1 block text-xs font-medium text-gray-600">{t('category.propertyFields')}</label>
-                <input id="cat-fields" value={form.propertyFields} onChange={(e) => setForm((f) => ({ ...f, propertyFields: e.target.value }))} placeholder="bedrooms, bathrooms, facing" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                <input id="cat-fields" value={form.propertyFields || ''} onChange={(e) => setForm((f) => ({ ...f, propertyFields: e.target.value }))} placeholder="bedrooms, bathrooms, facing" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 <p className="mt-1 text-xs text-gray-400">{t('category.propertyFieldsHint')}</p>
               </div>
 

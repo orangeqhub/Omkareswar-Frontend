@@ -21,8 +21,8 @@ function log(action, details, actor) {
   return { success: true };
 }
 
-async function getLogs() {
-  const response = await apiClient.get('/admin/audit-logs');
+async function getLogs(params = {}) {
+  const response = await apiClient.get('/admin/audit-logs', { params });
   return unwrapList(response);
 }
 

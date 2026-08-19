@@ -28,12 +28,12 @@ export default function EmployeeDashboard() {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Link to="/employee/verifications"><StatCard icon={ClipboardList} label={t('employeeDashboard.totalAssigned')} value={counts.totalAssigned} /></Link>
-        <Link to="/employee/verifications?status=pending_review"><StatCard icon={Clock} label={t('employeeDashboard.pending')} value={counts.pending} accent="amber" /></Link>
-        <Link to="/employee/verifications?status=in_review"><StatCard icon={Loader2} label={t('employeeDashboard.inProgress')} value={counts.inProgress} accent="blue" /></Link>
-        <Link to="/employee/verifications?status=completed"><StatCard icon={CheckCircle2} label={t('employeeDashboard.completed')} value={counts.completed} /></Link>
-        <Link to="/employee/follow-ups?tab=overdue"><StatCard icon={AlertTriangle} label={t('employeeDashboard.overdue')} value={counts.overdue} accent="red" /></Link>
+        <Link to="/employee/verifications"><StatCard icon={Clock} label={t('employeeDashboard.pending')} value={counts.pending} accent="amber" /></Link>
+        <Link to="/employee/verifications"><StatCard icon={Loader2} label={t('employeeDashboard.inProgress')} value={counts.inProgress} accent="blue" /></Link>
+        <Link to="/employee/verifications"><StatCard icon={CheckCircle2} label={t('employeeDashboard.completed')} value={counts.completed} /></Link>
+        <Link to="/employee/follow-ups?tab=following"><StatCard icon={AlertTriangle} label={t('employeeDashboard.overdue')} value={counts.overdue} accent="red" /></Link>
         <Link to="/employee/enquiries"><StatCard icon={Inbox} label={t('employeeDashboard.assignedEnquiries')} value={counts.assignedEnquiries} accent="blue" /></Link>
-        <Link to="/employee/follow-ups?tab=today"><StatCard icon={PhoneCall} label={t('employeeDashboard.todaysFollowUps')} value={counts.todaysFollowUps} accent="amber" /></Link>
+        <Link to="/employee/follow-ups?tab=following"><StatCard icon={PhoneCall} label={t('employeeDashboard.todaysFollowUps')} value={counts.todaysFollowUps} accent="amber" /></Link>
         <Link to="/employee/visits"><StatCard icon={CalendarCheck} label={t('employeeDashboard.upcomingVisits')} value={counts.upcomingVisits} /></Link>
       </div>
 
@@ -78,7 +78,7 @@ export default function EmployeeDashboard() {
             <ul className="space-y-2">
               {sections.recentAssignments.map((item) => (
                 <li key={item.id} className="rounded-lg bg-gray-50 p-2.5 text-sm">
-                  <p className="text-gray-700">{item.name || getLocalizedField(item, 'title', language) || item.buyerName}</p>
+                  <p className="text-gray-700">{item.name || getLocalizedField(item, 'title', language) || item.buyerName || item.reason}</p>
                   <p className="text-xs text-gray-400">{new Date(item.assignedAt).toLocaleDateString()}</p>
                 </li>
               ))}
@@ -121,7 +121,7 @@ export default function EmployeeDashboard() {
         <section className="rounded-xl border border-gray-200 p-4">
           <h2 className="mb-3 text-sm font-semibold text-brand-800">{t('employeeDashboard.recentNotifications')}</h2>
           {sections.recentNotifications.length === 0 ? (
-            <p className="text-xs text-gray-400">{t('empty.noNotifications')}</p>
+            <p className="text-xs text-gray-400">{t('common.noItems')}</p>
           ) : (
             <ul className="space-y-2">
               {sections.recentNotifications.map((n) => (

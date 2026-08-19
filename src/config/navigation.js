@@ -35,7 +35,6 @@ export const DASHBOARD_NAV = {
   ],
   employee: [
     { key: 'dashboard', path: '/employee/dashboard', labelKey: 'nav.dashboard', icon: 'LayoutDashboard', permission: 'EMPLOYEE_DASHBOARD_VIEW' },
-    { key: 'verifications', path: '/employee/verifications', labelKey: 'nav.verifications', icon: 'BadgeCheck', permission: 'USER_VERIFICATION_VIEW' },
     { key: 'properties', path: '/employee/properties', labelKey: 'nav.properties', icon: 'Building2', permission: 'PROPERTY_MODERATION_VIEW' },
     { key: 'enquiries', path: '/employee/enquiries', labelKey: 'nav.enquiries', icon: 'Inbox', permission: 'ENQUIRY_VIEW' },
     { key: 'visits', path: '/employee/visits', labelKey: 'nav.visits', icon: 'CalendarCheck', permission: 'VISIT_VIEW' },
@@ -49,6 +48,7 @@ export const DASHBOARD_NAV = {
     { key: 'registrations', path: '/admin/registrations', labelKey: 'nav.registrations', icon: 'UserPlus' },
     { key: 'users', path: '/admin/users', labelKey: 'nav.users', icon: 'Users' },
     { key: 'employees', path: '/admin/employees', labelKey: 'nav.employees', icon: 'IdCard' },
+    { key: 'assignments', path: '/admin/assignments', labelKey: 'nav.assignments', icon: 'Briefcase' },
     { key: 'properties', path: '/admin/properties', labelKey: 'nav.properties', icon: 'Building2' },
     { key: 'new-property', path: '/admin/properties/new', labelKey: 'nav.addProperty', icon: 'PlusSquare' },
     { key: 'categories', path: '/admin/categories', labelKey: 'nav.categories', icon: 'Tags' },
@@ -60,6 +60,8 @@ export const DASHBOARD_NAV = {
     { key: 'reports', path: '/admin/reports', labelKey: 'nav.reports', icon: 'BarChart3' },
     { key: 'notifications', path: '/admin/notifications', labelKey: 'nav.notifications', icon: 'Bell' },
     { key: 'audit-logs', path: '/admin/audit-logs', labelKey: 'nav.auditLogs', icon: 'History' },
+    { key: 'property-fields', path: '/admin/property-fields', labelKey: 'nav.propertyFields', icon: 'Sliders' },
+    { key: 'registration-forms', path: '/admin/registration-forms', labelKey: 'nav.registrationForms', icon: 'ClipboardList' },
     { key: 'settings', path: '/admin/settings', labelKey: 'nav.settings', icon: 'Settings' },
   ],
 };

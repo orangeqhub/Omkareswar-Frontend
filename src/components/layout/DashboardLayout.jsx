@@ -7,7 +7,7 @@ import LanguageToggle from '../common/LanguageToggle';
 import NotificationBell from '../dashboard/NotificationBell';
 import RouteLoadingFallback from '../common/RouteLoadingFallback';
 import { useAuthStore } from '../../store/authStore';
-import { DASHBOARD_NAV } from '../../config/navigation';
+import { DASHBOARD_NAV, ROLE_HOME } from '../../config/navigation';
 import { hasPermission } from '../../utils/permissions';
 import { getLogoutRedirectPath } from '../../utils/logoutRedirect';
 
@@ -18,6 +18,7 @@ function NavIcon({ name, ...props }) {
 
 export default function DashboardLayout({ role }) {
   const { t } = useTranslation(['common', 'dashboard']);
+  const [logoError, setLogoError] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -29,23 +30,36 @@ export default function DashboardLayout({ role }) {
     }`;
 
   const SidebarContent = (
-    <nav className="flex flex-col gap-1 px-3 py-4" aria-label="Dashboard navigation">
-      {items.map((item) => (
-        <NavLink key={item.key} to={item.path} className={sidebarLinkClass} onClick={() => setDrawerOpen(false)}>
-          <NavIcon name={item.icon} size={18} />
-          {t(item.labelKey)}
-        </NavLink>
-      ))}
-    </nav>
+    <div className="flex-1 overflow-y-auto min-h-0" style={{ maxHeight: 'calc(100vh - 70px)' }}>
+      <nav className="flex flex-col gap-1 px-3 py-4" aria-label="Dashboard navigation">
+        {items.map((item) => (
+          <NavLink key={item.key} to={item.path} className={sidebarLinkClass} onClick={() => setDrawerOpen(false)}>
+            <NavIcon name={item.icon} size={18} />
+            {t(item.labelKey)}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
   );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className="hidden w-64 shrink-0 border-r border-gray-100 bg-warm-white lg:block">
-        <Link to="/" className="flex items-center gap-2 border-b border-gray-100 px-4 py-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-warm-white font-bold text-sm">
-            OR
-          </span>
+      <aside className="hidden w-64 shrink-0 border-r border-gray-100 bg-warm-white lg:block h-screen sticky top-0 flex flex-col overflow-hidden">
+        <Link to={role === 'employee' ? ROLE_HOME[role] : '/'} className="flex items-center gap-2 border-b border-gray-100 px-4 py-4 shrink-0">
+          {logoError ? (
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-warm-white font-bold text-sm">
+              OR
+            </span>
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100">
+              <img
+                src="/logo.png"
+                alt={t('brand.logoAlt', { ns: 'common' })}
+                onError={() => setLogoError(true)}
+                className="h-full w-full object-contain"
+              />
+            </span>
+          )}
           <span className="text-sm font-bold text-brand-800">{t('brand.name', { ns: 'common' })}</span>
         </Link>
         {SidebarContent}
@@ -54,9 +68,18 @@ export default function DashboardLayout({ role }) {
       {drawerOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-64 bg-warm-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4">
-              <span className="text-sm font-bold text-brand-800">{t('brand.name', { ns: 'common' })}</span>
+          <div className="absolute left-0 top-0 h-full w-64 bg-warm-white shadow-xl flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 shrink-0">
+              <div className="flex items-center gap-2">
+                {logoError ? (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-warm-white font-bold text-sm">OR</span>
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100">
+                    <img src="/logo.png" alt={t('brand.logoAlt', { ns: 'common' })} onError={() => setLogoError(true)} className="h-full w-full object-contain" />
+                  </span>
+                )}
+                <span className="text-sm font-bold text-brand-800">{t('brand.name', { ns: 'common' })}</span>
+              </div>
               <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close menu">
                 <X size={20} />
               </button>

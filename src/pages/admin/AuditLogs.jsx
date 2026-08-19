@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { auditLogService } from '../../services/auditLogService';
 import EmptyState from '../../components/common/EmptyState';
+import { detailEntries, useEntityMaps } from '../../utils/entityIdLabels';
 
 export default function AuditLogs() {
   const { t } = useTranslation('dashboard');
   const [logs, setLogs] = useState([]);
+  const maps = useEntityMaps();
 
   useEffect(() => {
     auditLogService.getLogs().then(setLogs);
@@ -28,7 +30,21 @@ export default function AuditLogs() {
             <tr key={log.id}>
               <td className="px-4 py-3 font-medium text-gray-800">{log.action}</td>
               <td className="px-4 py-3 text-gray-600">
-                {log.details ? (typeof log.details === 'object' ? JSON.stringify(log.details) : log.details) : '-'}
+                {log.details ? (
+                  typeof log.details === 'object' ? (
+                    <div className="space-y-0.5 font-mono text-[11px]">
+                      {detailEntries(log.details, maps).map(({ key, label, display }) => (
+                        <div key={key}>
+                          <span className="font-medium text-gray-500">{label}:</span> {display}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    log.details
+                  )
+                ) : (
+                  '-'
+                )}
               </td>
               <td className="px-4 py-3 text-gray-500">{new Date(log.createdAt).toLocaleString()}</td>
             </tr>

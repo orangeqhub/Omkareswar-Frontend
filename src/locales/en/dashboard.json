@@ -228,6 +228,7 @@
   },
   "assignment": {
     "assignedTo": "Assigned to {{name}}",
+    "assigned": "Assigned",
     "unassigned": "Unassigned",
     "assignEmployee": "Assign Employee",
     "reassignEmployee": "Reassign Employee",
@@ -394,11 +395,11 @@
     }
   },
   "followUpTabs": {
-    "today": "Today",
+    "following": "Following",
     "upcoming": "Upcoming",
-    "overdue": "Overdue",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "callNotes": "Call Notes"
   },
   "followUpRecordType": {
     "userVerification": "User Verification",

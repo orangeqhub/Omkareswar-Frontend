@@ -44,11 +44,11 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-2.5">
         <Link to="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {logoError ? (
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 font-bold text-warm-white sm:h-11 sm:w-11">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-bold text-warm-white sm:h-14 sm:w-14 text-base sm:text-lg">
               OR
             </span>
           ) : (
-            <span className="flex aspect-square h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100 sm:h-11 sm:w-11">
+            <span className="flex aspect-square h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100 sm:h-14 sm:w-14">
               <img
                 src={logoImage}
                 alt={t('brand.logoAlt')}

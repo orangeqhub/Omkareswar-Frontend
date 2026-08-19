@@ -6,10 +6,12 @@ import CompareBar from './components/properties/CompareBar';
 import LocationPermissionPopup from './components/common/LocationPermissionPopup';
 import { useAuthStore } from './store/authStore';
 import { useFavouritesStore } from './store/favouritesStore';
+import { useCategoryStore } from './store/categoryStore';
 
 function App() {
   const init = useAuthStore((state) => state.init);
   const user = useAuthStore((state) => state.user);
+  const loadCategories = useCategoryStore((state) => state.loadCategories);
 
   const clearSession = useAuthStore(
     (state) => state.clearSession
@@ -19,13 +21,10 @@ function App() {
     (state) => state.refresh
   );
 
-  /*
-   * App open ayinappudu saved JWT token tho
-   * current session restore chestundi.
-   */
   useEffect(() => {
     init();
-  }, [init]);
+    loadCategories();
+  }, [init, loadCategories]);
 
   /*
    * Access token and refresh token expire ayithe

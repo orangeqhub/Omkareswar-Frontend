@@ -76,10 +76,10 @@ export default function Footer() {
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 sm:px-6 md:grid-cols-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-warm-white">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-warm-white">
               <img src={logoImage} alt={t('brand.logoAlt')} className="h-full w-full object-contain" />
             </span>
-            <h2 className="text-base font-bold text-warm-white">{t('brand.name')}</h2>
+            <h2 className="text-lg font-bold text-warm-white">{t('brand.name')}</h2>
           </div>
           <p className="mt-2.5 text-sm text-brand-200">{t('footer.about')}</p>
         </div>

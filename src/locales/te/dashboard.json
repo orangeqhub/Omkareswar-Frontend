@@ -228,6 +228,7 @@
   },
   "assignment": {
     "assignedTo": "{{name}}కు కేటాయించబడింది",
+    "assigned": "కేటాయించబడింది",
     "unassigned": "కేటాయించబడలేదు",
     "assignEmployee": "ఉద్యోగిని కేటాయించండి",
     "reassignEmployee": "ఉద్యోగిని తిరిగి కేటాయించండి",
@@ -394,11 +395,11 @@
     }
   },
   "followUpTabs": {
-    "today": "ఈరోజు",
+    "following": "అనుసరిస్తున్నవి",
     "upcoming": "రాబోయేవి",
-    "overdue": "మీరిన గడువు",
     "completed": "పూర్తయింది",
-    "cancelled": "రద్దు చేయబడింది"
+    "cancelled": "రద్దు చేయబడింది",
+    "callNotes": "కాల్ నోట్స్"
   },
   "followUpRecordType": {
     "userVerification": "వినియోగదారు ధృవీకరణ",

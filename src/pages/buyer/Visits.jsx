@@ -20,7 +20,7 @@ export default function Visits() {
         if (p) map[v.propertyId] = p.titleEn;
       }
       setTitles(map);
-    });
+    }).catch(() => {});
   }, [user]);
 
   if (visits.length === 0) return <EmptyState titleKey="empty.noData" />;

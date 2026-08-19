@@ -5,6 +5,25 @@ import { CITIES } from '../../data/locations';
 import { useLocationStore } from '../../store/locationStore';
 import { useUserLocationStore } from '../../store/userLocationStore';
 import { toast } from '../../store/toastStore';
+import { loadGoogleMapsScript } from '../../utils/googleMaps';
+
+function getGoogleString(obj) {
+  if (!obj) return '';
+  if (typeof obj === 'string') return obj;
+  if (typeof obj === 'object') {
+    if (typeof obj.text === 'string') return obj.text;
+    for (const key in obj) {
+      if (typeof obj[key] === 'string' && obj[key].length > 4) {
+        return obj[key];
+      }
+    }
+    for (const key in obj) {
+      if (typeof obj[key] === 'string') return obj[key];
+    }
+    return typeof obj.toString === 'function' ? obj.toString() : '';
+  }
+  return String(obj);
+}
 
 /**
  * Shared "Select Location" panel used by the Navbar in both desktop
@@ -20,12 +39,15 @@ export default function LocationPickerModal({ open, onClose }) {
   const requestLocation = useUserLocationStore((s) => s.requestLocation);
   const [query, setQuery] = useState('');
   const [detecting, setDetecting] = useState(false);
+  const [googleSuggestions, setGoogleSuggestions] = useState([]);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
 
   useEffect(() => {
     if (open) {
       setQuery('');
+      setGoogleSuggestions([]);
       const id = setTimeout(() => inputRef.current?.focus(), 0);
       return () => clearTimeout(id);
     }
@@ -41,11 +63,105 @@ export default function LocationPickerModal({ open, onClose }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
-  const filteredCities = useMemo(() => {
-    if (!query.trim()) return CITIES;
+  // Debounced Google Places API call
+  useEffect(() => {
+    if (!open) return;
+    if (!query.trim()) {
+      setGoogleSuggestions([]);
+      setLoadingGoogle(false);
+      return;
+    }
+
+    setLoadingGoogle(true);
+    const handler = setTimeout(() => {
+      loadGoogleMapsScript((err) => {
+        if (err) {
+          setLoadingGoogle(false);
+          return;
+        }
+        if (typeof window === 'undefined' || !window.google || !window.google.maps || !window.google.maps.places) {
+          setLoadingGoogle(false);
+          return;
+        }
+
+        try {
+          if (window.google.maps.places.AutocompleteSuggestion) {
+            const apCenter = new window.google.maps.LatLng(15.9129, 79.7400);
+            window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+              input: query,
+              includedRegionCodes: ['in'],
+              locationBias: apCenter,
+            }).then(({ suggestions }) => {
+              setLoadingGoogle(false);
+              if (suggestions && suggestions.length > 0) {
+                const list = suggestions.map((p) => {
+                  const display = getGoogleString(p.placePrediction.text || p.placePrediction.description);
+                  const value = getGoogleString(p.placePrediction.structuredFormatting?.mainText || p.placePrediction.structuredFormatting?.main_text || display);
+                  return { display, value };
+                });
+                setGoogleSuggestions(list);
+              } else {
+                setGoogleSuggestions([]);
+              }
+            }).catch((err) => {
+              console.warn('AutocompleteSuggestion failed, falling back to AutocompleteService:', err);
+              fallbackToService();
+            });
+          } else {
+            fallbackToService();
+          }
+        } catch (err) {
+          console.warn('Places API failed, falling back to AutocompleteService:', err);
+          fallbackToService();
+        }
+
+        function fallbackToService() {
+          try {
+            const service = new window.google.maps.places.AutocompleteService();
+            const apCenter = new window.google.maps.LatLng(15.9129, 79.7400);
+            service.getPlacePredictions(
+              {
+                input: query,
+                types: ['(regions)'],
+                componentRestrictions: { country: 'in' },
+                locationBias: apCenter,
+                radius: 300000,
+              },
+              (predictions, status) => {
+                setLoadingGoogle(false);
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                  const list = predictions.map((p) => ({
+                    display: p.description,
+                    value: p.structured_formatting?.main_text || p.description,
+                  }));
+                  setGoogleSuggestions(list);
+                } else {
+                  setGoogleSuggestions([]);
+                }
+              }
+            );
+          } catch (err) {
+            console.error('Legacy AutocompleteService error:', err);
+            setLoadingGoogle(false);
+            setGoogleSuggestions([]);
+          }
+        }
+      });
+    }, 250); // 250ms debounce
+
+    return () => clearTimeout(handler);
+  }, [query, open]);
+
+  const displayList = useMemo(() => {
+    if (!query.trim()) {
+      return CITIES.map((c) => ({ display: c, value: c }));
+    }
+    if (googleSuggestions.length > 0) {
+      return googleSuggestions;
+    }
     const term = query.trim().toLowerCase();
-    return CITIES.filter((c) => c.toLowerCase().includes(term));
-  }, [query]);
+    return CITIES.filter((c) => c.toLowerCase().includes(term)).map((c) => ({ display: c, value: c }));
+  }, [query, googleSuggestions]);
 
   if (!open) return null;
 
@@ -106,7 +222,11 @@ export default function LocationPickerModal({ open, onClose }) {
         </button>
 
         <div className="relative">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          {loadingGoogle ? (
+            <Loader2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+          ) : (
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          )}
           <input
             ref={inputRef}
             type="search"
@@ -161,22 +281,26 @@ export default function LocationPickerModal({ open, onClose }) {
           <p className="mb-1.5 flex items-center gap-1 text-xs font-semibold uppercase text-gray-400">
             <TrendingUp size={12} /> {query ? t('location.results') : t('location.popular')}
           </p>
-          {filteredCities.length === 0 ? (
-            <p className="py-4 text-center text-sm text-gray-400">{t('empty.noResults')}</p>
+          {displayList.length === 0 ? (
+            loadingGoogle ? (
+              <p className="py-4 text-center text-sm text-gray-400">Searching locations...</p>
+            ) : (
+              <p className="py-4 text-center text-sm text-gray-400">{t('empty.noResults')}</p>
+            )
           ) : (
             <ul role="listbox" aria-label={t('nav.selectLocation')} className="max-h-48 space-y-0.5 overflow-auto">
-              {filteredCities.map((city) => (
-                <li key={city}>
+              {displayList.map((item) => (
+                <li key={item.display}>
                   <button
                     type="button"
                     role="option"
-                    aria-selected={city === selectedLocation}
-                    onClick={() => handleSelect(city)}
+                    aria-selected={item.value === selectedLocation}
+                    onClick={() => handleSelect(item.value)}
                     className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-brand-50 ${
-                      city === selectedLocation ? 'bg-brand-50 font-semibold text-brand-800' : 'text-gray-700'
+                      item.value === selectedLocation ? 'bg-brand-50 font-semibold text-brand-800' : 'text-gray-700'
                     }`}
                   >
-                    {city}
+                    {item.display}
                   </button>
                 </li>
               ))}

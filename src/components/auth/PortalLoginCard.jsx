@@ -24,6 +24,7 @@ export default function PortalLoginCard({
   rememberMe,
   onRememberChange,
   onForgotPassword,
+  registerPath,
 }) {
   const { t } = useTranslation('auth');
   const [password, setPassword] = useState('');
@@ -43,7 +44,7 @@ export default function PortalLoginCard({
       </div>
       <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-warm-white p-6 shadow-lg sm:p-8">
         <div className="flex flex-col items-center text-center">
-          <img src={logoImage} alt={t('brand.logoAlt', { ns: 'common' })} className="h-14 w-14 rounded-xl object-contain" />
+          <img src={logoImage} alt={t('brand.logoAlt', { ns: 'common' })} className="h-20 w-20 rounded-xl object-contain" />
           <h1 className="mt-3 text-xl font-bold text-brand-900 sm:text-2xl">{heading}</h1>
         </div>
 
@@ -128,6 +129,12 @@ export default function PortalLoginCard({
           <ShieldCheck size={14} className="text-brand-600" aria-hidden="true" />
           {secureMessage}
         </p>
+
+        {registerPath && (
+          <Link to={registerPath} className="mt-3 block text-center text-sm font-semibold text-brand-600 hover:underline">
+            Register as Employee
+          </Link>
+        )}
 
         <Link to="/" className="mt-4 block text-center text-sm font-medium text-brand-700 hover:underline">
           {t('portal.backToWebsite')}

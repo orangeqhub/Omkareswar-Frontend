@@ -54,7 +54,7 @@ async function getDashboardSummary(viewer) {
   const todayStart = startOfToday();
   const todayEnd = endOfToday();
 
-  const totalAssigned = verifications.length + properties.length + enquiries.length;
+  const totalAssigned = verifications.length + properties.length + enquiries.length + followUps.length;
 
   const pending =
     verifications.filter((v) => v.verificationStatus === 'pending_review').length +
@@ -85,7 +85,10 @@ async function getDashboardSummary(viewer) {
 
   const upcomingVisits = visits.filter((v) => new Date(v.scheduledFor) >= now && v.status !== 'cancelled' && v.status !== 'completed');
 
-  const recentAssignments = [...verifications, ...properties, ...enquiries]
+  // Some assignments (seeded properties, enquiries) never set `assignedAt`,
+  // so fall back to `createdAt` for a meaningful "recent assignments" list.
+  const recentAssignments = [...verifications, ...properties, ...enquiries, ...followUps, ...visits]
+    .map((r) => ({ ...r, assignedAt: r.assignedAt || r.createdAt }))
     .filter((r) => r.assignedAt)
     .sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt))
     .slice(0, 5);

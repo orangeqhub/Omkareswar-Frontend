@@ -117,6 +117,11 @@ async function markComplete(_viewer, id) {
   return unwrap(response);
 }
 
+async function markStatus(id, status) {
+  const response = await apiClient.patch(`/employee/enquiries/${id}/mark-status`, { status });
+  return unwrap(response);
+}
+
 async function assignRecord(id, { assignedEmployeeId, assignedMediatorId } = {}) {
   let result = null;
 
@@ -137,6 +142,16 @@ async function assignRecord(id, { assignedEmployeeId, assignedMediatorId } = {})
   return result;
 }
 
+async function approveStatus(id) {
+  const response = await apiClient.post(`/admin/enquiries/${id}/approve-status`);
+  return unwrap(response);
+}
+
+async function rejectStatus(id) {
+  const response = await apiClient.post(`/admin/enquiries/${id}/reject-status`);
+  return unwrap(response);
+}
+
 export const enquiryService = {
   create,
   getAllEnquiries,
@@ -149,5 +164,8 @@ export const enquiryService = {
   setPriority,
   setNextFollowUp,
   markComplete,
+  markStatus,
   assignRecord,
+  approveStatus,
+  rejectStatus,
 };

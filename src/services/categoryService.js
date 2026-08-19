@@ -1,5 +1,7 @@
 import apiClient from './apiClient';
 import { PROPERTY_MEDIA_RULES } from '../config/propertyMediaRules';
+import { useCategoryStore } from '../store/categoryStore';
+import { mergeCategoryDefaults } from '../config/categoryDefaults';
 
 function unwrap(response) {
   return response?.data?.data ?? response?.data;
@@ -15,12 +17,16 @@ function unwrapList(response) {
 
 async function getCategories() {
   const response = await apiClient.get('/admin/categories');
-  return unwrapList(response);
+  const list = mergeCategoryDefaults(unwrapList(response));
+  useCategoryStore.setState({ categories: list, loaded: true });
+  return list;
 }
 
 async function getPublicCategories() {
   const response = await apiClient.get('/categories');
-  return unwrapList(response);
+  const list = mergeCategoryDefaults(unwrapList(response));
+  useCategoryStore.setState({ categories: list, loaded: true });
+  return list;
 }
 
 function slugify(value) {

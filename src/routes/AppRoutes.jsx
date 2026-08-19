@@ -73,12 +73,14 @@ const EmployeeVisits = lazy(() => import('../pages/employee/Visits'));
 const EmployeeFollowUps = lazy(() => import('../pages/employee/FollowUps'));
 const EmployeeNotifications = lazy(() => import('../pages/employee/Notifications'));
 const EmployeeReports = lazy(() => import('../pages/employee/Reports'));
-const EmployeeProfile = lazy(() => import('../pages/buyer/Profile'));
+const EmployeeProfile = lazy(() => import('../pages/employee/Profile'));
 
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminRegistrations = lazy(() => import('../pages/admin/Registrations'));
 const AdminUsers = lazy(() => import('../pages/admin/Users'));
 const AdminEmployees = lazy(() => import('../pages/admin/Employees'));
+const AdminAssignments = lazy(() => import('../pages/admin/Assignments'));
+const AdminActivities = lazy(() => import('../pages/admin/Activities'));
 const AdminProperties = lazy(() => import('../pages/admin/Properties'));
 const AdminAddProperty = lazy(() => import('../pages/seller/AddProperty'));
 const AdminCategories = lazy(() => import('../pages/admin/Categories'));
@@ -91,6 +93,9 @@ const AdminReports = lazy(() => import('../pages/admin/Reports'));
 const AdminNotifications = lazy(() => import('../pages/admin/Notifications'));
 const AdminAuditLogs = lazy(() => import('../pages/admin/AuditLogs'));
 const AdminSettings = lazy(() => import('../pages/admin/Settings'));
+const AdminPropertyFields = lazy(() => import('../pages/admin/PropertyFields'));
+const AdminRegistrationForms = lazy(() => import('../pages/admin/RegistrationForms'));
+const AdminEditProperty = lazy(() => import('../pages/seller/EditProperty'));
 
 function DashboardRoute({ role }) {
   return (
@@ -123,6 +128,7 @@ export default function AppRoutes() {
           />
           <Route path="/register" element={<Register />} />
           <Route path="/register/:role" element={<Navigate to="/register" replace />} />
+          <Route path="/employee/register" element={<Register defaultRole="employee" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/application-status" element={<ApplicationStatus />} />
         </Route>
@@ -228,8 +234,11 @@ export default function AppRoutes() {
           <Route path="registrations" element={<AdminRegistrations />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="employees" element={<AdminEmployees />} />
+          <Route path="assignments" element={<AdminAssignments />} />
+          <Route path="activities" element={<AdminActivities />} />
           <Route path="properties" element={<AdminProperties />} />
           <Route path="properties/new" element={<AdminAddProperty />} />
+          <Route path="properties/:id/edit" element={<AdminEditProperty />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="media-rules" element={<AdminMediaRules />} />
           <Route path="cms" element={<AdminCms />} />
@@ -240,6 +249,8 @@ export default function AppRoutes() {
           <Route path="notifications" element={<AdminNotifications />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="property-fields" element={<AdminPropertyFields />} />
+          <Route path="registration-forms" element={<AdminRegistrationForms />} />
         </Route>
 
         <Route path="/unauthorized" element={<Unauthorized />} />

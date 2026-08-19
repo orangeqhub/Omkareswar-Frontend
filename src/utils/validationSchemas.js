@@ -8,17 +8,34 @@ export const registrationSchema = z
     mobile: mobileSchema,
     altMobile: z.string().regex(/^\d{10}$/, 'validation.invalidMobile').optional().or(z.literal('')),
     email: z.string().email('validation.invalidEmail'),
-    password: z.string().min(6, 'validation.passwordTooShort'),
-    confirmPassword: z.string().min(1, 'validation.required'),
     district: z.string().min(1, 'validation.required'),
     city: z.string().min(1, 'validation.required'),
     address: z.string().min(1, 'validation.required'),
-    role: z.enum(['buyer', 'seller', 'mediator']).default('buyer'),
+    role: z.enum(['buyer', 'seller', 'mediator', 'employee']).default('buyer'),
     roleDetail: z.string().optional().or(z.literal('')),
     acceptTerms: z.literal(true, { errorMap: () => ({ message: 'validation.mustAcceptTerms' }) }),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+    aadhaarCard: z.any().optional(),
+    panCard: z.any().optional(),
+    certificate10th: z.any().optional(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'validation.passwordMismatch',
+  .refine((data) => {
+    if (data.role === 'employee') {
+      return !!data.password && data.password.length >= 6;
+    }
+    return true;
+  }, {
+    message: 'Password must be at least 6 characters long',
+    path: ['password'],
+  })
+  .refine((data) => {
+    if (data.role === 'employee') {
+      return data.password === data.confirmPassword;
+    }
+    return true;
+  }, {
+    message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
 

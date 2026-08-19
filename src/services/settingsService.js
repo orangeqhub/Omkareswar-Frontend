@@ -9,9 +9,14 @@ async function getSettings() {
   return unwrap(response);
 }
 
+async function getPublicSettings() {
+  const response = await apiClient.get('/admin/settings/public');
+  return unwrap(response);
+}
+
 async function updateSettings(patch) {
   const response = await apiClient.patch('/admin/settings', patch);
   return unwrap(response);
 }
 
-export const settingsService = { getSettings, updateSettings };
+export const settingsService = { getSettings, getPublicSettings, updateSettings };

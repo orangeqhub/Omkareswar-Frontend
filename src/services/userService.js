@@ -26,6 +26,14 @@ async function updateUser(id, patch) {
   return unwrap(response);
 }
 
+async function changePassword(currentPassword, newPassword) {
+  const response = await apiClient.post('/users/change-password', {
+    currentPassword,
+    newPassword,
+  });
+  return unwrap(response);
+}
+
 async function setStatus(id, status) {
   const response = await apiClient.patch(`/users/${id}/status`, { status });
   return unwrap(response);
@@ -57,13 +65,35 @@ async function assignMediator(userId, mediatorId) {
   return unwrap(response);
 }
 
+async function createUser(data) {
+  const response = await apiClient.post('/admin/users', data);
+  return unwrap(response);
+}
+
+async function deleteUser(id) {
+  const response = await apiClient.delete(`/admin/users/${id}`);
+  return unwrap(response);
+}
+
+async function assignEmployee(userId, employeeId, reason) {
+  const response = await apiClient.patch(`/admin/users/${userId}/assign-employee`, {
+    employeeId,
+    reason,
+  });
+  return unwrap(response);
+}
+
 export const userService = {
   getUsers,
   getUserById,
   updateUser,
+  changePassword,
   setStatus,
   createEmployee,
   updatePermissions,
   setEmployeeStatus,
   assignMediator,
+  assignEmployee,
+  createUser,
+  deleteUser,
 };

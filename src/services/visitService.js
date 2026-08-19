@@ -94,6 +94,16 @@ async function assignRecord(id, data = {}) {
   return unwrap(response);
 }
 
+async function approveVisit(id) {
+  const response = await apiClient.post(`/admin/visits/${id}/approve`);
+  return unwrap(response);
+}
+
+async function rejectVisit(id, note) {
+  const response = await apiClient.post(`/admin/visits/${id}/reject`, { note });
+  return unwrap(response);
+}
+
 export const visitService = {
   getForBuyer,
   getForSeller,
@@ -109,4 +119,6 @@ export const visitService = {
   addVisitNote,
   recordOutcome,
   assignRecord,
+  approveVisit,
+  rejectVisit,
 };

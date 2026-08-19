@@ -108,6 +108,7 @@ export default function EmployeeLogin() {
         rememberMe={rememberMe}
         onRememberChange={setRememberMe}
         onForgotPassword={handleOpenForgotModal}
+        registerPath="/employee/register"
       />
 
       {showForgotModal && (

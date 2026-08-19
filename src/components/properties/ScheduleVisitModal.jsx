@@ -29,7 +29,11 @@ export default function ScheduleVisitModal({ open, onClose, onConfirm }) {
     if (!selectedDate || !selectedSlot) return;
     const slotObj = TIME_SLOTS.find((s) => s.id === selectedSlot);
     if (!slotObj) return;
-    const combinedISO = `${selectedDate}T${slotObj.startTime}:00`;
+    const offset = -new Date().getTimezoneOffset();
+    const sign = offset >= 0 ? '+' : '-';
+    const h = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    const m = String(Math.abs(offset) % 60).padStart(2, '0');
+    const combinedISO = `${selectedDate}T${slotObj.startTime}:00${sign}${h}:${m}`;
     onConfirm(combinedISO);
   };
 

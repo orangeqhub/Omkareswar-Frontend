@@ -29,6 +29,8 @@ async function assign(viewer, recordType, recordId, assignedEmployeeId, extra = 
   switch (recordType) {
     case 'userVerification':
       return registrationService.assignEmployee(recordId, assignedEmployeeId, viewer.id);
+    case 'user':
+      return userService.assignEmployee(recordId, assignedEmployeeId, extra.reason);
     case 'property':
       return propertyService.assignRecord(recordId, { assignedEmployeeId, assignedBy: viewer.id });
     case 'enquiry':

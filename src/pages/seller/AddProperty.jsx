@@ -16,31 +16,7 @@ import Step5Amenities from '../../components/forms/wizard/Step5Amenities';
 import Step6Images from '../../components/forms/wizard/Step6Images';
 import Step7ContactPreference from '../../components/forms/wizard/Step7ContactPreference';
 import Step8PreviewSubmit from '../../components/forms/wizard/Step8PreviewSubmit';
-
-function validateStep(step, data) {
-  const errors = {};
-  if (step === 1) {
-    if (!data.titleEn) errors.titleEn = true;
-    if (!data.categorySlug) errors.categorySlug = true;
-    if (!data.descriptionEn) errors.descriptionEn = true;
-  }
-  if (step === 2) {
-    if (!data.district) errors.district = true;
-    if (!data.cityVillage) errors.cityVillage = true;
-    if (!data.address) errors.address = true;
-    if (!data.mapLocation) errors.mapLocation = true;
-    if (data.pincode && !/^\d{6}$/.test(data.pincode)) errors.pincode = true;
-  }
-  if (step === 3) {
-    if (!data.price || Number(data.price) <= 0) errors.price = true;
-    if (!data.area || Number(data.area) <= 0) errors.area = true;
-  }
-  if (step === 7) {
-    if (!data.contactName) errors.contactName = true;
-    if (!/^\d{10}$/.test(data.contactPhone || '')) errors.contactPhone = true;
-  }
-  return errors;
-}
+import { settingsService } from '../../services/settingsService';
 
 const POST_SUBMIT_PATH = {
   buyer: '/buyer/my-properties',
@@ -58,13 +34,9 @@ export default function AddProperty() {
   const { user } = useAuthStore();
   const { formData, updateData, saveDraft, submitForApproval, loaded } = useDraftProperty(user?.id, id);
   const [step, setStep] = useState(1);
-  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [rule, setRule] = useState(null);
 
-  // Coming from the Property Type Selection screen (/post-property) pre-fills
-  // the category — but only into a genuinely fresh draft, never over one
-  // already being resumed/edited, so an in-progress draft is never clobbered.
   useEffect(() => {
     if (!loaded) return;
     const { categorySlug, ruleKey } = location.state || {};
@@ -89,11 +61,24 @@ export default function AddProperty() {
     t('wizard.step8Title'),
   ];
 
+  const [fieldConfig, setFieldConfig] = useState({});
+  const [propertyFields, setPropertyFields] = useState([]);
+
+  useEffect(() => {
+    settingsService.getPublicSettings()
+      .then((res) => {
+        if (res && res.fieldConfig) {
+          setFieldConfig(res.fieldConfig);
+        }
+        if (res && res.propertyFields) {
+          setPropertyFields(res.propertyFields);
+        }
+      })
+      .catch((err) => console.error('Failed to load fields configurations:', err));
+  }, []);
+
   const mediaReady = useMemo(() => {
-    if (!formData.ruleKey || !rule) {
-      console.log('DEBUG_MEDIA_READY: ruleKey or rule missing', { ruleKey: formData.ruleKey, hasRule: !!rule });
-      return false;
-    }
+    if (!formData.ruleKey || !rule) return false;
     const building = isBuildingType(formData.ruleKey);
     const structureCounts = building
       ? {
@@ -114,30 +99,16 @@ export default function AddProperty() {
         return !img || Boolean(img.caption);
       });
     const hasPrimary = formData.images.some((img) => img.isPrimary);
-    
-    console.log('DEBUG_MEDIA_READY_EVAL:', {
-      hasAllRequired,
-      hasPrimary,
-      captionsOk,
-      requiredSlots: requiredSlots.map(s => s.id),
-      uploadedSlotIds: formData.images.map(img => img.slotId),
-      images: formData.images.map(img => ({ slotId: img.slotId, isPrimary: img.isPrimary, caption: img.caption }))
-    });
-    
     return hasAllRequired && hasPrimary && captionsOk;
   }, [formData, rule]);
 
   const documentsReady = Boolean(formData.documents?.identityProof && formData.documents?.ownershipProof);
 
-  const canSubmit = useMemo(
-    () => [1, 2, 3, 7].every((s) => Object.keys(validateStep(s, formData)).length === 0) && mediaReady && documentsReady,
-    [formData, mediaReady, documentsReady]
-  );
+  const canSubmit = mediaReady && documentsReady;
 
   if (!loaded) return null;
 
   function handleNext() {
-    const stepErrors = validateStep(step, formData);
     if (step === 6 && !mediaReady) {
       toast.error(t('media.error.requiredSlotsIncomplete'));
       return;
@@ -146,12 +117,6 @@ export default function AddProperty() {
       toast.error(t('media.error.documentsRequired'));
       return;
     }
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors(stepErrors);
-      toast.error(t('validation.required'));
-      return;
-    }
-    setErrors({});
     setStep((s) => Math.min(8, s + 1));
   }
 
@@ -182,13 +147,6 @@ export default function AddProperty() {
       setStep(6);
       return;
     }
-    const stepErrors = validateStep(7, formData);
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors(stepErrors);
-      setStep(7);
-      toast.error(t('validation.required'));
-      return;
-    }
     setSaving(true);
     try {
       await submitForApproval();
@@ -206,13 +164,13 @@ export default function AddProperty() {
       <h1 className="mb-6 text-xl font-bold text-brand-800">{steps[step - 1]}</h1>
       <WizardStepper steps={steps} current={step} />
 
-      {step === 1 && <Step1BasicDetails data={formData} onChange={updateData} errors={errors} />}
-      {step === 2 && <Step2Location data={formData} onChange={updateData} errors={errors} />}
-      {step === 3 && <Step3PriceSize data={formData} onChange={updateData} errors={errors} />}
-      {step === 4 && <Step4Structure data={formData} onChange={updateData} />}
-      {step === 5 && <Step5Amenities data={formData} onChange={updateData} />}
+      {step === 1 && <Step1BasicDetails data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
+      {step === 2 && <Step2Location data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
+      {step === 3 && <Step3PriceSize data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
+      {step === 4 && <Step4Structure data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
+      {step === 5 && <Step5Amenities data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
       {step === 6 && <Step6Images data={formData} onChange={updateData} />}
-      {step === 7 && <Step7ContactPreference data={formData} onChange={updateData} errors={errors} />}
+      {step === 7 && <Step7ContactPreference data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
       {step === 8 && <Step8PreviewSubmit data={formData} />}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-6">

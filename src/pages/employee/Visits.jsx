@@ -65,7 +65,16 @@ export default function Visits() {
               <p className="text-sm text-gray-500">{v.buyerName} &middot; {new Date(v.scheduledFor).toLocaleString()}</p>
               {v.meetingLocation && <p className="text-xs text-gray-400">{v.meetingLocation}</p>}
             </div>
-            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{t(`visit.status.${v.status}`)}</span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{t(`visit.status.${v.status}`)}</span>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  v.assignedEmployeeId === user.id ? 'bg-brand-50 text-brand-700' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {v.assignedEmployeeId === user.id ? t('assignment.assigned') : t('assignment.unassigned')}
+              </span>
+            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">

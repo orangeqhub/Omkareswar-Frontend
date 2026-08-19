@@ -225,6 +225,11 @@ async function getActiveListingsValue() {
   };
 }
 
+async function getPopularLocations(limit = 6) {
+  const response = await apiClient.get('/properties/popular-locations', { params: { limit } });
+  return unwrap(response);
+}
+
 export const propertyService = {
   getProperties,
   getPropertyById,
@@ -248,4 +253,5 @@ export const propertyService = {
   assignRecord,
   isUsedByAnyProperty,
   getActiveListingsValue,
+  getPopularLocations,
 };

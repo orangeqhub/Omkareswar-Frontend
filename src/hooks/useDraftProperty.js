@@ -9,7 +9,7 @@ export function useDraftProperty(sellerId, existingPropertyId) {
   const { t } = useTranslation('forms');
   const [formData, setFormData] = useState(() => {
     const draft = readJSON(STORAGE_KEYS.WIZARD_DRAFT, null);
-    if (draft && draft.sellerId && sellerId && draft.sellerId !== sellerId) {
+    if (draft && sellerId && (!draft.sellerId || draft.sellerId !== sellerId)) {
       return createEmptyWizardData();
     }
     return draft || createEmptyWizardData();
@@ -29,24 +29,25 @@ export function useDraftProperty(sellerId, existingPropertyId) {
         setLoaded(true);
       });
     } else {
-      setFormData(readJSON(STORAGE_KEYS.WIZARD_DRAFT, null) || createEmptyWizardData());
+      const draft = readJSON(STORAGE_KEYS.WIZARD_DRAFT, null);
+      if (draft && sellerId && (!draft.sellerId || draft.sellerId !== sellerId)) {
+        setFormData(createEmptyWizardData());
+      } else {
+        setFormData(draft || createEmptyWizardData());
+      }
       setDraftId(null);
       setLoaded(true);
     }
-  }, [existingPropertyId]);
+  }, [existingPropertyId, sellerId]);
 
   useEffect(() => {
     if (!loaded) return;
-    const ok = writeJSON(STORAGE_KEYS.WIZARD_DRAFT, formData);
+    const ok = writeJSON(STORAGE_KEYS.WIZARD_DRAFT, { ...formData, sellerId });
     if (!ok && storageOk) {
-      // formData itself is untouched (it already lives in React state) — only
-      // the localStorage mirror failed, so nothing about the in-progress
-      // draft is lost for the current session.
       toast.error(t('media.error.storageQuotaExceeded'));
     }
     setStorageOk(ok);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, loaded]);
+  }, [formData, loaded, sellerId, storageOk]);
 
   const updateData = useCallback((patch) => {
     setFormData((prev) => ({ ...prev, ...patch }));

@@ -1,14 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { POPULAR_LOCATIONS } from '../../data/locations';
+import { propertyService } from '../../services/propertyService';
 
 export default function PopularLocations() {
   const { t } = useTranslation('common');
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    propertyService.getPopularLocations(6).then((data) => {
+      if (Array.isArray(data)) setLocations(data);
+    }).catch(() => {});
+  }, []);
+
+  if (locations.length === 0) return null;
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <h2 className="text-xl font-bold text-brand-800 sm:text-2xl">{t('sections.popularLocations')}</h2>
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {POPULAR_LOCATIONS.map((loc) => (
+        {locations.map((loc) => (
           <Link
             key={loc.city}
             to={`/properties?city=${encodeURIComponent(loc.city)}`}

@@ -19,8 +19,8 @@ export default function BuyerDashboard() {
   useEffect(() => {
     if (!user) return;
     propertyService.getFavourites(user.id).then((list) => setCounts((c) => ({ ...c, favourites: list.length })));
-    enquiryService.getForBuyer(user.mobile).then((list) => setCounts((c) => ({ ...c, interests: list.length })));
-    visitService.getForBuyer(user.id).then((list) => setCounts((c) => ({ ...c, visits: list.length })));
+    enquiryService.getForBuyer(user.mobile).then((list) => setCounts((c) => ({ ...c, interests: list.length }))).catch(() => {});
+    visitService.getForBuyer(user.id).then((list) => setCounts((c) => ({ ...c, visits: list.length }))).catch(() => {});
   }, [user]);
 
   return (
