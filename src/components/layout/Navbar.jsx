@@ -71,7 +71,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <div className="relative">
+          <div className="relative" onMouseLeave={() => setLocationOpen(false)}>
             <button
               type="button"
               onClick={() => setLocationOpen((o) => !o)}
@@ -167,7 +167,7 @@ export default function Navbar() {
                 {t(link.labelKey)}
               </NavLink>
             ))}
-            <div className="relative">
+            <div className="relative" onMouseLeave={() => setLocationOpen(false)}>
               <button
                 type="button"
                 onClick={() => setLocationOpen((o) => !o)}

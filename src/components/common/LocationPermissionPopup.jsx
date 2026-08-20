@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin, X } from 'lucide-react';
 import { readJSON, writeJSON, STORAGE_KEYS } from '../../utils/storage';
+import { useLocationStore } from '../../store/locationStore';
 
 const POPUP_DELAY_MS = 5000;
 
@@ -31,6 +32,11 @@ export default function LocationPermissionPopup() {
   const [entered, setEntered] = useState(false);
   const dialogRef = useRef(null);
 
+  const close = useCallback(() => {
+    setEntered(false);
+    setTimeout(() => setVisible(false), 200);
+  }, []);
+
   useEffect(() => {
     const saved = readJSON(STORAGE_KEYS.GEO_PERMISSION, null);
     if (saved === 'allow-always' || saved === 'never') return undefined;
@@ -38,16 +44,20 @@ export default function LocationPermissionPopup() {
     return () => clearTimeout(timer);
   }, []);
 
+  const selectedLocation = useLocationStore((s) => s.selectedLocation);
+  const prevLocationRef = useRef(selectedLocation);
+  useEffect(() => {
+    if (visible && selectedLocation !== prevLocationRef.current && selectedLocation) {
+      close();
+    }
+    prevLocationRef.current = selectedLocation;
+  }, [selectedLocation, visible, close]);
+
   useEffect(() => {
     if (!visible) return undefined;
     const raf = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(raf);
   }, [visible]);
-
-  const close = useCallback(() => {
-    setEntered(false);
-    setTimeout(() => setVisible(false), 200);
-  }, []);
 
   useEffect(() => {
     if (!visible) return undefined;

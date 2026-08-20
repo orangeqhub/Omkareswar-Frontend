@@ -20,10 +20,6 @@ const ROLES = ['buyer', 'seller', 'mediator'];
 export default function Register({ defaultRole }) {
   const navigate = useNavigate();
   const { t } = useTranslation('forms');
-  const [step, setStep] = useState('form');
-  const [otp, setOtp] = useState('');
-  const [otpError, setOtpError] = useState('');
-  const [pendingData, setPendingData] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formConfig, setFormConfig] = useState(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
@@ -117,72 +113,18 @@ export default function Register({ defaultRole }) {
       const currentRole = data.role || defaultRole || 'buyer';
       const payload = { ...standard, customFields };
 
+      await submitRegistration(payload, currentRole);
+
       if (currentRole === 'employee') {
-        await submitRegistration(payload, currentRole);
         navigate('/application-status', { state: { mobile: standard.mobile } });
-        return;
+      } else {
+        navigate('/login', { state: { mobile: standard.mobile } });
       }
-
-      setPendingData({ role: currentRole, ...payload });
-      setStep('otp');
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function handleVerify(e) {
-    e.preventDefault();
-    if (!/^\d{4,6}$/.test(otp)) {
-      setOtpError(t('registration.otpHint'));
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const { role, ...payload } = pendingData;
-      await submitRegistration(payload, role);
-      navigate('/login', { state: { mobile: pendingData.mobile } });
-    } catch (err) {
-      toast.error(err.message || 'Registration failed');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (step === 'otp') {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16">
-        <h1 className="text-xl font-bold text-brand-800">{t('registration.otpTitle')}</h1>
-        <p className="mt-2 text-sm text-gray-500">{t('registration.otpHint')}</p>
-        <form onSubmit={handleVerify} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="otp" className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('registration.otpLabel')}
-            </label>
-            <input
-              id="otp"
-              inputMode="numeric"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-center text-lg tracking-widest"
-              maxLength={6}
-            />
-            {otpError && <p className="mt-1 text-xs text-red-600">{otpError}</p>}
-          </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-warm-white hover:bg-brand-700 disabled:opacity-60"
-          >
-            {t('registration.verify')}
-          </button>
-          <button type="button" onClick={() => setStep('form')} className="w-full text-sm text-gray-500 hover:underline">
-            {t('buttons.back', { ns: 'common' })}
-          </button>
-        </form>
-      </div>
-    );
   }
 
   return (
