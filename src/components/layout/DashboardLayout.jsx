@@ -2,7 +2,7 @@ import { Suspense, useState } from 'react';
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as Icons from 'lucide-react';
-import { Menu, X, LogOut, ChevronRight } from 'lucide-react';
+import { Menu, X, LogOut, ChevronRight, Tag } from 'lucide-react';
 import LanguageToggle from '../common/LanguageToggle';
 import NotificationBell from '../dashboard/NotificationBell';
 import RouteLoadingFallback from '../common/RouteLoadingFallback';
@@ -108,6 +108,17 @@ export default function DashboardLayout({ role }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {(role === 'admin' || role === 'employee') && (
+              <button
+                type="button"
+                onClick={() => navigate(`/${role}/post-property`)}
+                aria-label={t('nav.sell', { ns: 'common' })}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-brand-600 px-3 py-1.5 text-sm font-bold text-warm-white transition-colors hover:bg-brand-700"
+              >
+                <Tag size={15} />
+                <span className="hidden min-[360px]:inline">{t('nav.sell', { ns: 'common' })}</span>
+              </button>
+            )}
             <LanguageToggle />
             <NotificationBell />
             <div className="hidden items-center gap-2 sm:flex">

@@ -66,6 +66,7 @@ const EmployeeDashboard = lazy(() => import('../pages/employee/Dashboard'));
 const EmployeeVerifications = lazy(() => import('../pages/employee/Verifications'));
 const EmployeeVerificationDetail = lazy(() => import('../pages/employee/VerificationDetail'));
 const EmployeeProperties = lazy(() => import('../pages/employee/Properties'));
+const EmployeeAddProperty = lazy(() => import('../pages/seller/AddProperty'));
 const EmployeePropertyDetail = lazy(() => import('../pages/employee/PropertyModerationDetail'));
 const EmployeeEnquiries = lazy(() => import('../pages/employee/Enquiries'));
 const EmployeeEnquiryDetail = lazy(() => import('../pages/employee/EnquiryDetail'));
@@ -196,6 +197,14 @@ export default function AppRoutes() {
             element={<RequirePermission permission="PROPERTY_MODERATION_VIEW"><EmployeeProperties /></RequirePermission>}
           />
           <Route
+            path="properties/new"
+            element={<RequirePermission permission="PROPERTY_MODERATION_VIEW"><EmployeeAddProperty /></RequirePermission>}
+          />
+          <Route
+            path="post-property"
+            element={<RequirePermission permission="PROPERTY_MODERATION_VIEW"><PostPropertyType /></RequirePermission>}
+          />
+          <Route
             path="properties/:id"
             element={<RequirePermission permission="PROPERTY_MODERATION_VIEW"><EmployeePropertyDetail /></RequirePermission>}
           />
@@ -239,6 +248,7 @@ export default function AppRoutes() {
           <Route path="properties" element={<AdminProperties />} />
           <Route path="properties/new" element={<AdminAddProperty />} />
           <Route path="properties/:id/edit" element={<AdminEditProperty />} />
+          <Route path="post-property" element={<PostPropertyType />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="media-rules" element={<AdminMediaRules />} />
           <Route path="cms" element={<AdminCms />} />

@@ -36,6 +36,7 @@ export const DASHBOARD_NAV = {
   employee: [
     { key: 'dashboard', path: '/employee/dashboard', labelKey: 'nav.dashboard', icon: 'LayoutDashboard', permission: 'EMPLOYEE_DASHBOARD_VIEW' },
     { key: 'properties', path: '/employee/properties', labelKey: 'nav.properties', icon: 'Building2', permission: 'PROPERTY_MODERATION_VIEW' },
+    { key: 'new-property', path: '/employee/properties/new', labelKey: 'nav.addProperty', icon: 'PlusSquare', permission: 'PROPERTY_MODERATION_VIEW' },
     { key: 'enquiries', path: '/employee/enquiries', labelKey: 'nav.enquiries', icon: 'Inbox', permission: 'ENQUIRY_VIEW' },
     { key: 'visits', path: '/employee/visits', labelKey: 'nav.visits', icon: 'CalendarCheck', permission: 'VISIT_VIEW' },
     { key: 'follow-ups', path: '/employee/follow-ups', labelKey: 'nav.followUps', icon: 'PhoneCall', permission: 'FOLLOWUP_VIEW' },

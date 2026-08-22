@@ -4,9 +4,10 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Plus, Pencil, Trash2, X, FileText, Activity, Clock, MapPin, ShieldCheck, Mail, Phone, Calendar } from 'lucide-react';
+import { Download, Plus, Pencil, Trash2, X, FileText, Activity, Clock, MapPin, ShieldCheck, Mail, Phone, Calendar, Eye, EyeOff } from 'lucide-react';
 
 import { userService } from '../../services/userService';
+import { useAuthStore } from '../../store/authStore';
 import StatusBadge from '../../components/dashboard/StatusBadge';
 import EmptyState from '../../components/common/EmptyState';
 import { toast } from '../../store/toastStore';
@@ -46,6 +47,12 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const maps = useEntityMaps();
+  const { user: admin } = useAuthStore();
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+
+  function toggleShowPassword(id) {
+    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
 
   // CRUD State
   const [showModal, setShowModal] = useState(false);
@@ -449,6 +456,19 @@ export default function Users() {
                     <p className="text-xs text-gray-500">
                       {user.mobile || '-'}
                     </p>
+
+                    {(() => {
+                      const pwd = admin?.role === 'admin' ? user.temporaryPassword || null : null;
+                      if (!pwd) return null;
+                      return (
+                        <div className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-mono text-gray-700">
+                          <span>Password: {visiblePasswords[user.id] ? pwd : '••••••••'}</span>
+                          <button type="button" onClick={() => toggleShowPassword(user.id)} className="text-brand-700 hover:underline text-[10px] font-sans font-medium cursor-pointer" title="Show/hide password">
+                            {visiblePasswords[user.id] ? <EyeOff size={12} className="inline" /> : <Eye size={12} className="inline" />}
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   <td className="px-4 py-3 capitalize font-semibold text-gray-700">
@@ -865,8 +885,12 @@ export default function Users() {
                               actionLabel = `Changed: ${log.details?.field || 'profile'}`;
                               changeDetail = `${log.details?.oldValue || 'N/A'} → ${log.details?.newValue || 'N/A'}`;
                             } else if (isPwdChange) {
-                              actionLabel = 'Security Update';
-                              changeDetail = log.details?.message || 'Password changed';
+                              actionLabel = 'Password Changed';
+                              const oldVal = log.details?.oldValue;
+                              const newVal = log.details?.newValue;
+                              changeDetail = oldVal && newVal && oldVal !== 'N/A'
+                                ? `${oldVal} → ${newVal}`
+                                : log.details?.message || 'Password changed';
                             } else {
                               changeDetail = formatActivityDetails(log.action, log.details, maps);
                             }
