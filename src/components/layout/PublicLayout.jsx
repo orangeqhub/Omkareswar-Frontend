@@ -35,6 +35,8 @@ export default function PublicLayout() {
 
   const phoneRaw = cms?.contactPhone || '+91 90000 00000';
   const cleanPhone = phoneRaw.replace(/[^+\d]/g, '');
+  const whatsappRaw = cms?.contactWhatsapp || phoneRaw;
+  const cleanWhatsapp = whatsappRaw.replace(/[^+\d]/g, '');
 
   return (
     <div className="flex min-h-screen flex-col bg-warm-white relative">
@@ -64,7 +66,7 @@ export default function PublicLayout() {
         </a>
 
         <a
-          href={`https://wa.me/${cleanPhone.replace('+', '')}?text=Hi%2C%20I%20am%20interested%20in%20properties%20on%20Omkareswar%20Realtors.%20Please%20assist%20me.`}
+          href={`https://wa.me/${cleanWhatsapp.replace('+', '')}?text=Hi%2C%20I%20am%20interested%20in%20properties%20on%20Omkareswar%20Realtors.%20Please%20assist%20me.`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition-all duration-300 hover:bg-[#20ba5a] hover:-translate-y-1 active:scale-95 cursor-pointer"
