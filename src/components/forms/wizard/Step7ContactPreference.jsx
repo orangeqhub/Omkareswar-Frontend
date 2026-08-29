@@ -1,9 +1,10 @@
 ﻿import { useTranslation } from 'react-i18next';
+import StepExtraFields from './StepExtraFields';
 
 function en(id, fc) { return fc[id] ? fc[id].enabled !== false : true; }
 function lb(id, def, fc) { return fc[id]?.label || def; }
 
-export default function Step7ContactPreference({ data, onChange, fieldConfig = {} }) {
+export default function Step7ContactPreference({ data, onChange, fieldConfig = {}, propertyFields = [] }) {
   const { t } = useTranslation('forms');
 
   return (
@@ -44,6 +45,8 @@ export default function Step7ContactPreference({ data, onChange, fieldConfig = {
           {lb('hidePhone', t('wizard.hidePhone'), fieldConfig)}
         </label>
       )}
+
+      <StepExtraFields step={7} data={data} onChange={onChange} propertyFields={propertyFields} />
     </div>
   );
 }

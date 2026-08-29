@@ -1,7 +1,9 @@
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CATEGORIES } from '../../config/categories';
-import { CITIES } from '../../data/locations';
+import { STATES, DISTRICTS, CITIES } from '../../data/locations';
 import { useLanguageStore } from '../../store/languageStore';
+import { getEnabledFilters } from '../../config/propertyFilterConfig';
 import DualRangeSlider from '../common/DualRangeSlider';
 
 const FACINGS = ['North', 'South', 'East', 'West', 'North-East', 'North-West', 'South-East', 'South-West'];
@@ -20,12 +22,31 @@ export function isResidentialCategory(slug) {
   return RESIDENTIAL_SLUGS.includes(slug);
 }
 
-export default function FilterPanel({ filters, onChange, onReset, hideCategory, selectedCategorySlug }) {
+export default function FilterPanel({ filters, onChange, onReset, hideCategory, selectedCategorySlug, filterConfig }) {
   const { t } = useTranslation('properties');
   const language = useLanguageStore((s) => s.language);
 
   const activeCategory = selectedCategorySlug || filters.categorySlug;
   const showRoomFilters = isResidentialCategory(activeCategory);
+
+  const enabledFilters = useMemo(() => getEnabledFilters(filterConfig), [filterConfig]);
+
+  // ── Cascading location state ──
+  const [filterState, setFilterState] = useState(filters.state || '');
+  const [filterDistrict, setFilterDistrict] = useState(filters.district || '');
+
+  const districtsForState = useMemo(() => {
+    if (!filterState) return [];
+    return DISTRICTS[filterState] || [];
+  }, [filterState]);
+
+  useEffect(() => {
+    if (filters.state !== filterState) setFilterState(filters.state || '');
+  }, [filters.state]);
+
+  useEffect(() => {
+    if (filters.district !== filterDistrict) setFilterDistrict(filters.district || '');
+  }, [filters.district]);
 
   function set(patch) {
     const nextFilters = { ...filters, ...patch };
@@ -40,8 +61,66 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
     onChange(nextFilters);
   }
 
-  return (
-    <div className="space-y-6">
+  function handleStateChange(e) {
+    const val = e.target.value;
+    setFilterState(val);
+    setFilterDistrict('');
+    set({ state: val || undefined, district: undefined, city: undefined });
+  }
+
+  function handleDistrictChange(e) {
+    const val = e.target.value;
+    setFilterDistrict(val);
+    set({ district: val || undefined, city: undefined });
+  }
+
+  const selectCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm';
+
+  function renderState() {
+    return (
+      <div>
+        <label htmlFor="filter-state" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.state', { defaultValue: 'State' })}
+        </label>
+        <select
+          id="filter-state"
+          value={filterState}
+          onChange={handleStateChange}
+          className={selectCls}
+        >
+          <option value="">{t('filters.any')}</option>
+          {STATES.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  function renderDistrict() {
+    return (
+      <div>
+        <label htmlFor="filter-district" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.district', { defaultValue: 'District' })}
+        </label>
+        <select
+          id="filter-district"
+          value={filterDistrict}
+          onChange={handleDistrictChange}
+          disabled={!filterState}
+          className={selectCls + (!filterState ? ' bg-gray-100 cursor-not-allowed' : '')}
+        >
+          <option value="">{filterState ? t('filters.any') : 'Select State first'}</option>
+          {districtsForState.map(d => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  function renderCity() {
+    return (
       <div>
         <label htmlFor="filter-location" className="mb-1.5 block text-sm font-medium text-gray-700">
           {t('filters.location')}
@@ -50,34 +129,41 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           id="filter-location"
           value={filters.city || ''}
           onChange={(e) => set({ city: e.target.value || undefined })}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className={selectCls}
         >
           <option value="">{t('filters.any')}</option>
-          {CITIES.map((c) => (
+          {CITIES.map(c => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
       </div>
+    );
+  }
 
-      {!hideCategory && (
-        <div>
-          <label htmlFor="filter-category" className="mb-1.5 block text-sm font-medium text-gray-700">
-            {t('filters.category')}
-          </label>
-          <select
-            id="filter-category"
-            value={filters.categorySlug || ''}
-            onChange={(e) => set({ categorySlug: e.target.value || undefined })}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            <option value="">{t('filters.any')}</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.slug} value={c.slug}>{language === 'te' ? c.nameTe : c.nameEn}</option>
-            ))}
-          </select>
-        </div>
-      )}
+  function renderCategory() {
+    if (hideCategory) return null;
+    return (
+      <div>
+        <label htmlFor="filter-category" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.category')}
+        </label>
+        <select
+          id="filter-category"
+          value={filters.categorySlug || ''}
+          onChange={(e) => set({ categorySlug: e.target.value || undefined })}
+          className={selectCls}
+        >
+          <option value="">{t('filters.any')}</option>
+          {CATEGORIES.map(c => (
+            <option key={c.slug} value={c.slug}>{language === 'te' ? c.nameTe : c.nameEn}</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
+  function renderPrice() {
+    return (
       <div>
         <span className="mb-1.5 block text-sm font-medium text-gray-700">{t('filters.priceRange')}</span>
         <DualRangeSlider
@@ -93,7 +179,11 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           <span>₹{(filters.maxPrice ?? MAX_PRICE).toLocaleString('en-IN')}</span>
         </div>
       </div>
+    );
+  }
 
+  function renderArea() {
+    return (
       <div>
         <span className="mb-1.5 block text-sm font-medium text-gray-700">{t('filters.areaRange')}</span>
         <DualRangeSlider
@@ -109,44 +199,55 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           <span>{filters.maxArea ?? MAX_AREA}</span>
         </div>
       </div>
+    );
+  }
 
-      {showRoomFilters && (
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="filter-bedrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('filters.bedrooms')}
-            </label>
-            <select
-              id="filter-bedrooms"
-              value={filters.bedrooms || ''}
-              onChange={(e) => set({ bedrooms: e.target.value ? Number(e.target.value) : undefined })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">{t('filters.any')}</option>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>{n}+</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="filter-bathrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('filters.bathrooms')}
-            </label>
-            <select
-              id="filter-bathrooms"
-              value={filters.bathrooms || ''}
-              onChange={(e) => set({ bathrooms: e.target.value ? Number(e.target.value) : undefined })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="">{t('filters.any')}</option>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>{n}+</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+  function renderBedrooms() {
+    if (!showRoomFilters) return null;
+    return (
+      <div>
+        <label htmlFor="filter-bedrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.bedrooms')}
+        </label>
+        <select
+          id="filter-bedrooms"
+          value={filters.bedrooms || ''}
+          onChange={(e) => set({ bedrooms: e.target.value ? Number(e.target.value) : undefined })}
+          className={selectCls}
+        >
+          <option value="">{t('filters.any')}</option>
+          {[1, 2, 3, 4, 5].map(n => (
+            <option key={n} value={n}>{n}+</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
 
+  function renderBathrooms() {
+    if (!showRoomFilters) return null;
+    return (
+      <div>
+        <label htmlFor="filter-bathrooms" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.bathrooms')}
+        </label>
+        <select
+          id="filter-bathrooms"
+          value={filters.bathrooms || ''}
+          onChange={(e) => set({ bathrooms: e.target.value ? Number(e.target.value) : undefined })}
+          className={selectCls}
+        >
+          <option value="">{t('filters.any')}</option>
+          {[1, 2, 3, 4, 5].map(n => (
+            <option key={n} value={n}>{n}+</option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  function renderFacing() {
+    return (
       <div>
         <label htmlFor="filter-facing" className="mb-1.5 block text-sm font-medium text-gray-700">
           {t('filters.facing')}
@@ -155,34 +256,41 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           id="filter-facing"
           value={filters.facing || ''}
           onChange={(e) => set({ facing: e.target.value || undefined })}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className={selectCls}
         >
           <option value="">{t('filters.any')}</option>
-          {FACINGS.map((f) => (
+          {FACINGS.map(f => (
             <option key={f} value={f}>{f}</option>
           ))}
         </select>
       </div>
+    );
+  }
 
-      {showRoomFilters && (
-        <div>
-          <label htmlFor="filter-furnishing" className="mb-1.5 block text-sm font-medium text-gray-700">
-            {t('filters.furnishing')}
-          </label>
-          <select
-            id="filter-furnishing"
-            value={filters.furnishing || ''}
-            onChange={(e) => set({ furnishing: e.target.value || undefined })}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            <option value="">{t('filters.any')}</option>
-            <option value="furnished">Furnished</option>
-            <option value="semi">Semi-furnished</option>
-            <option value="unfurnished">Unfurnished</option>
-          </select>
-        </div>
-      )}
+  function renderFurnishing() {
+    if (!showRoomFilters) return null;
+    return (
+      <div>
+        <label htmlFor="filter-furnishing" className="mb-1.5 block text-sm font-medium text-gray-700">
+          {t('filters.furnishing')}
+        </label>
+        <select
+          id="filter-furnishing"
+          value={filters.furnishing || ''}
+          onChange={(e) => set({ furnishing: e.target.value || undefined })}
+          className={selectCls}
+        >
+          <option value="">{t('filters.any')}</option>
+          <option value="furnished">Furnished</option>
+          <option value="semi">Semi-furnished</option>
+          <option value="unfurnished">Unfurnished</option>
+        </select>
+      </div>
+    );
+  }
 
+  function renderQuality() {
+    return (
       <div>
         <span className="mb-1.5 block text-sm font-medium text-gray-700">{t('filters.featuredOrVerified')}</span>
         <div className="flex flex-col gap-2">
@@ -206,11 +314,82 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           </label>
         </div>
       </div>
+    );
+  }
+
+  function renderCustomFilter(def) {
+    const label = def.label || def.fieldKey || def.id;
+    const value = filters[def.id] ?? '';
+
+    if (def.type === 'select' && Array.isArray(def.options) && def.options.length > 0) {
+      return (
+        <div>
+          <label htmlFor={`filter-${def.id}`} className="mb-1.5 block text-sm font-medium text-gray-700">
+            {label}
+          </label>
+          <select
+            id={`filter-${def.id}`}
+            value={value}
+            onChange={(e) => set({ [def.id]: e.target.value || undefined })}
+            className={selectCls}
+          >
+            <option value="">{t('filters.any')}</option>
+            {def.options.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <label htmlFor={`filter-${def.id}`} className="mb-1.5 block text-sm font-medium text-gray-700">
+          {label}
+        </label>
+        <input
+          id={`filter-${def.id}`}
+          type={def.type === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => set({ [def.id]: e.target.value || undefined })}
+          className={selectCls}
+          placeholder={t('filters.any')}
+        />
+      </div>
+    );
+  }
+
+  const renderers = {
+    state: renderState,
+    district: renderDistrict,
+    city: renderCity,
+    category: renderCategory,
+    price: renderPrice,
+    area: renderArea,
+    bedrooms: renderBedrooms,
+    bathrooms: renderBathrooms,
+    facing: renderFacing,
+    furnishing: renderFurnishing,
+    quality: renderQuality,
+  };
+
+  const visibleBlocks = enabledFilters
+    .map((def) => ({
+      id: def.id,
+      node: def.custom ? renderCustomFilter(def) : renderers[def.id]?.(),
+    }))
+    .filter((b) => b.node != null);
+
+  return (
+    <div className="space-y-6">
+      {visibleBlocks.map((block) => (
+        <div key={block.id}>{block.node}</div>
+      ))}
 
       <button
         type="button"
         onClick={onReset}
-        className="w-full rounded-lg border border-gray-300 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        className="mt-2 w-full rounded-lg border border-gray-300 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
       >
         {t('filters.clearAll')}
       </button>

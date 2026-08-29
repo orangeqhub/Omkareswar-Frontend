@@ -68,6 +68,30 @@ export const useCategoryStore = create((set, get) => ({
       icon: 'Building2',
       image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=60',
     },
+    {
+      slug: 'industrial-lands',
+      ruleKey: 'commercialPlot',
+      nameEn: 'Industrial Lands',
+      nameTe: 'పారిశ్రామిక భూములు',
+      icon: 'Factory',
+      image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=60',
+    },
+    {
+      slug: 'warehouse-godowns',
+      ruleKey: 'commercialPlot',
+      nameEn: 'Warehouses / Godowns',
+      nameTe: 'గోదాములు',
+      icon: 'Warehouse',
+      image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=60',
+    },
+    {
+      slug: 'farm-houses',
+      ruleKey: 'independentHouse',
+      nameEn: 'Farm Houses',
+      nameTe: 'ఫారం హౌస్‌లు',
+      icon: 'Trees',
+      image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=60',
+    },
   ],
   loaded: false,
   loading: false,
@@ -78,7 +102,18 @@ export const useCategoryStore = create((set, get) => ({
     try {
       const list = await categoryService.getPublicCategories();
       if (list && list.length > 0) {
-        set({ categories: mergeCategoryDefaults(list), loaded: true });
+        const merged = mergeCategoryDefaults(list);
+        const fetched = new Set(merged.map((c) => c.slug));
+        const defaults = get().categories.filter((c) => !fetched.has(c.slug));
+        const combined = mergeCategoryDefaults([...merged, ...defaults]);
+        const ordered = [...combined].sort((a, b) => {
+          const ai = merged.findIndex((m) => m.slug === a.slug);
+          const bi = merged.findIndex((m) => m.slug === b.slug);
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        });
+        set({ categories: ordered, loaded: true });
       }
     } catch (err) {
       console.error('Failed to load dynamic categories, falling back to default:', err);

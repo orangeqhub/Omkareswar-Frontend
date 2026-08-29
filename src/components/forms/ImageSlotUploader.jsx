@@ -6,8 +6,6 @@ import { resolveMediaUrl } from '../../store/url';
 
 export default function ImageSlotUploader({
   label,
-  required,
-  captionRequired,
   primaryEligible = true,
   image,
   isPrimary,
@@ -26,15 +24,10 @@ export default function ImageSlotUploader({
     e.target.value = '';
   }
 
-  const captionMissing = captionRequired && image && !image.caption;
-
   return (
     <div className={`rounded-xl border p-3 ${error ? 'border-red-400' : 'border-gray-200'}`}>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-800">{label}</span>
-        <span className={`text-xs ${required ? 'text-red-500' : 'text-gray-400'}`}>
-          {required ? t('media.required') : t('media.optional')}
-        </span>
       </div>
 
       <div className="mt-2 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-gray-50">
@@ -69,9 +62,12 @@ export default function ImageSlotUploader({
             type="text"
             value={image.caption || ''}
             onChange={(e) => onCaptionChange(e.target.value)}
-            placeholder={captionRequired ? `${t('media.captionPlaceholder')} *` : t('media.captionPlaceholder')}
-            className={`mt-2 w-full rounded-lg border px-2 py-1.5 text-xs ${captionMissing ? 'border-red-400' : 'border-gray-200'}`}
+            placeholder={t('media.captionPlaceholder')}
+            className="mt-2 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-xs"
           />
+          {(image.uploadedAt || image.createdAt) && (
+            <p className="mt-1.5 text-xs text-gray-400">{t('media.uploadedAt', { date: new Date(image.uploadedAt || image.createdAt).toLocaleString() })}</p>
+          )}
           {primaryEligible && (
             <button
               type="button"

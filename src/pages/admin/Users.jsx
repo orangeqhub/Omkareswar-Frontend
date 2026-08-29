@@ -4,11 +4,12 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Plus, Pencil, Trash2, X, FileText, Activity, Clock, MapPin, ShieldCheck, Mail, Phone, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Download, Plus, Pencil, Trash2, X, FileText, Activity, Clock, MapPin, ShieldCheck, Mail, Phone, Calendar, Eye, EyeOff, Search, PhoneCall } from 'lucide-react';
 
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import StatusBadge from '../../components/dashboard/StatusBadge';
+import CompletionBadge from '../../components/dashboard/CompletionBadge';
 import EmptyState from '../../components/common/EmptyState';
 import { toast } from '../../store/toastStore';
 import { exportSingleSheetXlsx } from '../../utils/xlsxExport';
@@ -33,6 +34,26 @@ const emptyUserForm = () => ({
   role: 'buyer',
   roleDetail: '',
 });
+
+function TrackedUserRow({ user, onView }) {
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-2 py-2">
+      <div>
+        <button
+          type="button"
+          onClick={() => onView(user)}
+          className="text-left font-medium text-brand-700 hover:underline cursor-pointer"
+        >
+          {user.name || '-'}
+        </button>
+        <div className="text-xs text-gray-500">
+          {user.role} · {user.memberId || '-'} · Mobile: {user.mobile || '-'}
+        </div>
+      </div>
+      <StatusBadge status={user.status} />
+    </li>
+  );
+}
 
 export default function Users() {
   const { t } = useTranslation([
@@ -64,6 +85,12 @@ export default function Users() {
   const [detailTarget, setDetailTarget] = useState(null);
   const [detailData, setDetailData] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Number tracking state
+  const [trackNumber, setTrackNumber] = useState('');
+  const [trackResult, setTrackResult] = useState(null);
+  const [tracking, setTracking] = useState(false);
+  const [trackError, setTrackError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -136,6 +163,28 @@ export default function Users() {
       toast.error('Failed to load user details');
     } finally {
       setLoadingDetails(false);
+    }
+  }
+
+  async function handleTrackNumber(e) {
+    e.preventDefault();
+    const number = trackNumber.trim();
+    if (!/^[6-9]\d{9}$/.test(number)) {
+      setTrackError('Enter a valid 10 digit mobile number');
+      setTrackResult(null);
+      return;
+    }
+    setTracking(true);
+    setTrackError('');
+    try {
+      const result = await userService.trackNumber(number);
+      setTrackResult(result);
+    } catch (error) {
+      console.error('Number lookup failed:', error);
+      setTrackError(error.message || 'Unable to track number');
+      setTrackResult(null);
+    } finally {
+      setTracking(false);
     }
   }
 
@@ -400,6 +449,95 @@ export default function Users() {
           </button>
         </div>
       </div>
+
+      <div className="mb-4 rounded-xl border border-gray-200 bg-white p-3">
+        <form onSubmit={handleTrackNumber} className="flex flex-wrap items-center gap-2">
+          <label htmlFor="track-number" className="text-sm font-medium text-gray-700">
+            Track Number
+          </label>
+          <input
+            id="track-number"
+            type="text"
+            inputMode="numeric"
+            placeholder="10 digit mobile number"
+            value={trackNumber}
+            onChange={(e) => setTrackNumber(e.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none w-56"
+          />
+          <button
+            type="submit"
+            disabled={tracking}
+            className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-semibold text-warm-white hover:bg-brand-700 cursor-pointer disabled:opacity-60"
+          >
+            <Search size={14} />
+            {tracking ? 'Searching...' : 'Track'}
+          </button>
+          {trackResult && (
+            <button
+              type="button"
+              onClick={() => setTrackResult(null)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+        </form>
+        {trackError && <p className="mt-2 text-sm text-red-600">{trackError}</p>}
+      </div>
+
+      {trackResult && (
+        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 font-semibold text-brand-800">
+              <PhoneCall size={16} />
+              Connections for number: {trackResult.number}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setTrackResult(null)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg bg-gray-50 p-3">
+              <h4 className="text-xs font-medium uppercase text-gray-500">
+                Registered Account ({trackResult.owner.length})
+              </h4>
+              {trackResult.owner.length === 0 ? (
+                <p className="mt-1 text-sm text-gray-500">
+                  No account registered with this number.
+                </p>
+              ) : (
+                <ul className="mt-2 divide-y divide-gray-200">
+                  {trackResult.owner.map((u) => (
+                    <TrackedUserRow key={u.id} user={u} onView={handleViewDetails} />
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-3">
+              <h4 className="text-xs font-medium uppercase text-gray-500">
+                Listed as Alternative ({trackResult.listedAsAlternativeCount})
+              </h4>
+              {trackResult.listedAsAlternative.length === 0 ? (
+                <p className="mt-1 text-sm text-gray-500">
+                  No user has listed this number as their alternative number.
+                </p>
+              ) : (
+                <ul className="mt-2 divide-y divide-gray-200">
+                  {trackResult.listedAsAlternative.map((u) => (
+                    <TrackedUserRow key={u.id} user={u} onView={handleViewDetails} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {users.length === 0 ? (
         <EmptyState titleKey="empty.noData" />
@@ -815,7 +953,10 @@ export default function Users() {
                             <p className="font-semibold text-gray-800">{p.titleEn || p.titleTe || 'Untitled Property'}</p>
                             <p className="text-gray-500">{p.propertyCode} &middot; {p.city}, {p.district}</p>
                           </div>
-                          <span className="rounded bg-brand-50 px-2 py-0.5 font-medium text-brand-700 uppercase">{p.status}</span>
+                          <span className="flex items-center gap-2">
+                            <CompletionBadge score={p.completionScore} />
+                            <span className="rounded bg-brand-50 px-2 py-0.5 font-medium text-brand-700 uppercase">{p.status}</span>
+                          </span>
                         </div>
                       ))}
                     </div>

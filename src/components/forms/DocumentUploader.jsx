@@ -16,7 +16,6 @@ export default function DocumentUploader({ label, document, onUpload, error }) {
     <div className={`rounded-xl border p-3 ${error ? 'border-red-400' : 'border-gray-200'}`}>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-800">{label}</span>
-        <span className="text-xs text-red-500">{t('media.required')}</span>
       </div>
 
       <div className="mt-2 flex h-16 items-center gap-2 rounded-lg bg-gray-50 px-3">
@@ -25,6 +24,10 @@ export default function DocumentUploader({ label, document, onUpload, error }) {
           {document ? t('documents.uploadedFile', { name: document.fileName }) : t('documents.acceptedFormats')}
         </span>
       </div>
+
+      {(document?.uploadedAt || document?.createdAt) && (
+        <p className="mt-1.5 text-xs text-gray-400">{t('documents.uploadedAt', { date: new Date(document.uploadedAt || document.createdAt).toLocaleString() })}</p>
+      )}
 
       <input
         ref={inputRef}

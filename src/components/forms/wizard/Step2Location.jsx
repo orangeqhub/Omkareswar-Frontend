@@ -1,48 +1,79 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Locate, Loader2 } from 'lucide-react';
-import { STATES } from '../../../data/locations';
+import { STATES, DISTRICTS, CITIES, MANDALS } from '../../../data/locations';
 import { toast } from '../../../store/toastStore';
 import { loadGoogleMapsScript } from '../../../utils/googleMaps';
+import StepExtraFields from './StepExtraFields';
 
-export default function Step2Location({ data, onChange, fieldConfig = {} }) {
+export default function Step2Location({ data, onChange, fieldConfig = {}, propertyFields = [] }) {
   const { t } = useTranslation('forms');
   const [detecting, setDetecting] = useState(false);
-
   const [mapInstance, setMapInstance] = useState(null);
   const [markerInstance, setMarkerInstance] = useState(null);
 
+  // ── Cascading dropdown state ──
+  const [selectedState, setSelectedState] = useState(data.state || '');
+  const [selectedDistrict, setSelectedDistrict] = useState(data.district || '');
+
+  const districtsForState = useMemo(() => {
+    if (!selectedState) return [];
+    return DISTRICTS[selectedState] || [];
+  }, [selectedState]);
+
+  const citiesForDistrict = useMemo(() => {
+    if (!selectedDistrict) return CITIES;
+    return CITIES;
+  }, [selectedDistrict]);
+
+  const mandalsForDistrict = useMemo(() => {
+    if (!selectedDistrict) return [];
+    return MANDALS[selectedDistrict] || [];
+  }, [selectedDistrict]);
+
+  const mandalListed = mandalsForDistrict.includes(data.mandal);
+
+  // Sync external data changes (e.g. geolocation) into local dropdown state
+  useEffect(() => {
+    if (data.state && data.state !== selectedState) {
+      setSelectedState(data.state);
+    }
+  }, [data.state]);
+
+  useEffect(() => {
+    if (data.district && data.district !== selectedDistrict) {
+      setSelectedDistrict(data.district);
+    }
+  }, [data.district]);
+
+  // ── Google Maps init ──
   useEffect(() => {
     loadGoogleMapsScript(() => {
       if (typeof window === 'undefined' || !window.google) return;
-
+      const mapEl = document.getElementById('wizard-map');
+      if (!mapEl) return;
       const initLat = Number(data.mapLat) || 16.3067;
       const initLng = Number(data.mapLng) || 80.4365;
-
-      const mapOptions = {
+      const map = new window.google.maps.Map(mapEl, {
         center: { lat: initLat, lng: initLng },
         zoom: 14,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-      };
-
-      const map = new window.google.maps.Map(document.getElementById('wizard-map'), mapOptions);
+      });
       const marker = new window.google.maps.Marker({
         position: { lat: initLat, lng: initLng },
-        map: map,
+        map,
         draggable: true,
       });
-
       marker.addListener('dragend', () => {
-        const position = marker.getPosition();
+        const pos = marker.getPosition();
         onChange({
-          mapLat: position.lat().toFixed(6),
-          mapLng: position.lng().toFixed(6),
-          mapLocation: `https://maps.google.com/?q=${position.lat().toFixed(6)},${position.lng().toFixed(6)}`
+          mapLat: pos.lat().toFixed(6),
+          mapLng: pos.lng().toFixed(6),
+          mapLocation: `https://maps.google.com/?q=${pos.lat().toFixed(6)},${pos.lng().toFixed(6)}`,
         });
       });
-
       setMapInstance(map);
       setMarkerInstance(marker);
     });
@@ -60,6 +91,20 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
     }
   }, [data.mapLat, data.mapLng, mapInstance, markerInstance]);
 
+  // ── Handlers ──
+  function handleStateChange(e) {
+    const val = e.target.value;
+    setSelectedState(val);
+    setSelectedDistrict('');
+    onChange({ state: val, district: '', mandal: '' });
+  }
+
+  function handleDistrictChange(e) {
+    const val = e.target.value;
+    setSelectedDistrict(val);
+    onChange({ district: val, mandal: '' });
+  }
+
   function handleUseCurrentLocation() {
     setDetecting(true);
     if (!navigator.geolocation) {
@@ -67,51 +112,35 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
       setDetecting(false);
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-
         if (mapInstance && markerInstance) {
           mapInstance.setCenter({ lat, lng });
           mapInstance.setZoom(15);
           markerInstance.setPosition({ lat, lng });
         }
-
         const patch = {
           mapLat: lat.toFixed(6),
           mapLng: lng.toFixed(6),
-          mapLocation: `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`
+          mapLocation: `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`,
         };
-
         try {
           const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
           const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
           const geocode = await res.json();
-          if (geocode && geocode.status === 'OK' && geocode.results && geocode.results.length > 0) {
-            const firstResult = geocode.results[0];
-            const addressComponents = firstResult.address_components;
-            
-            let district = '';
-            let state = '';
-            let postcode = '';
-            
+          if (geocode?.status === 'OK' && geocode.results?.length > 0) {
+            const addressComponents = geocode.results[0].address_components;
+            let district = '', state = '', postcode = '';
             addressComponents.forEach(component => {
               const types = component.types;
-              if (types.includes('administrative_area_level_2')) {
-                district = component.long_name;
-              }
-              if (types.includes('administrative_area_level_1')) {
-                state = component.long_name;
-              }
-              if (types.includes('postal_code')) {
-                postcode = component.long_name;
-              }
+              if (types.includes('administrative_area_level_2')) district = component.long_name;
+              if (types.includes('administrative_area_level_1')) state = component.long_name;
+              if (types.includes('postal_code')) postcode = component.long_name;
             });
-
             if (state) {
-              const matchedState = STATES.find((s) => s.toLowerCase() === state.toLowerCase());
+              const matchedState = STATES.find(s => s.toLowerCase() === state.toLowerCase());
               patch.state = matchedState || state;
             }
             if (district) {
@@ -119,13 +148,11 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
               patch.district = cleaned;
             }
             if (postcode) patch.pincode = postcode;
-            
-            patch.address = firstResult.formatted_address || '';
+            patch.address = geocode.results[0].formatted_address || '';
           }
         } catch (err) {
           console.warn('Google reverse geocoding failed:', err);
         }
-
         onChange(patch);
         setDetecting(false);
         toast.success('Location updated to current coordinates!');
@@ -146,8 +173,10 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
     );
   }
 
-  const en = (id) => fieldConfig[id] ? fieldConfig[id].enabled !== false : true;
+  const en = (id) => (fieldConfig[id] ? fieldConfig[id].enabled !== false : true);
   const lb = (id, def) => fieldConfig[id]?.label || def;
+
+  const selectCls = 'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none bg-white';
 
   return (
     <div className="space-y-4">
@@ -173,60 +202,195 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* ── State dropdown ── */}
         {en('state') && (
           <div>
-            <label htmlFor="wz-state" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('state', t('wizard.state'))}</label>
-            <input id="wz-state" type="text" value={data.state || ''} onChange={(e) => onChange({ state: e.target.value })} placeholder="Enter State" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none" />
+            <label htmlFor="wz-state" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {lb('state', t('wizard.state'))}
+            </label>
+            <select
+              id="wz-state"
+              value={selectedState}
+              onChange={handleStateChange}
+              className={selectCls}
+            >
+              <option value="">Select State</option>
+              {STATES.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
         )}
+
+        {/* ── District dropdown (cascades from state) ── */}
         {en('district') && (
           <div>
-            <label htmlFor="wz-district" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('district', t('wizard.district'))}</label>
-            <input id="wz-district" type="text" value={data.district || ''} onChange={(e) => onChange({ district: e.target.value })} placeholder="Enter District" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none" />
+            <label htmlFor="wz-district" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {lb('district', t('wizard.district'))}
+            </label>
+            <select
+              id="wz-district"
+              value={selectedDistrict}
+              onChange={handleDistrictChange}
+              disabled={!selectedState}
+              className={selectCls + (!selectedState ? ' bg-gray-100 cursor-not-allowed' : '')}
+            >
+              <option value="">{selectedState ? 'Select District' : 'Select State first'}</option>
+              {districtsForState.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {en('mandal') && (
-          <div>
-            <label htmlFor="wz-mandal" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('mandal', t('wizard.mandal'))}</label>
-            <input id="wz-mandal" value={data.mandal || ''} onChange={(e) => onChange({ mandal: e.target.value })} placeholder="Enter Mandal" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none" />
-          </div>
+          mandalsForDistrict.length === 0 ? (
+            <div>
+              <label htmlFor="wz-mandal" className="mb-1.5 block text-sm font-medium text-gray-700">
+                {lb('mandal', t('wizard.mandal'))}
+              </label>
+              <input
+                id="wz-mandal"
+                value={data.mandal || ''}
+                onChange={(e) => onChange({ mandal: e.target.value })}
+                placeholder={selectedDistrict ? 'Enter Mandal' : 'Select District first'}
+                disabled={!selectedDistrict}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+          ) : (
+            <div>
+              <label htmlFor="wz-mandal" className="mb-1.5 block text-sm font-medium text-gray-700">
+                {lb('mandal', t('wizard.mandal'))}
+              </label>
+              <select
+                id="wz-mandal"
+                value={mandalListed ? data.mandal : '__other__'}
+                onChange={(e) => {
+                  if (e.target.value === '__other__') {
+                    onChange({ mandal: '' });
+                  } else {
+                    onChange({ mandal: e.target.value });
+                  }
+                }}
+                disabled={!selectedDistrict}
+                className={selectCls + (!selectedDistrict ? ' bg-gray-100 cursor-not-allowed' : '')}
+              >
+                <option value="">{selectedDistrict ? 'Select Mandal' : 'Select District first'}</option>
+                {mandalsForDistrict.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+                <option value="__other__">Other (type manually)</option>
+              </select>
+              {selectedDistrict && !mandalListed && (
+                <input
+                  type="text"
+                  value={data.mandal || ''}
+                  onChange={(e) => onChange({ mandal: e.target.value })}
+                  placeholder="Type mandal name"
+                  className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
+                />
+              )}
+            </div>
+          )
         )}
+
+        {/* ── City / Town / Village dropdown with "Other" option ── */}
         {en('cityVillage') && (
           <div>
-            <label htmlFor="wz-city" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('cityVillage', t('wizard.cityVillage'))}</label>
-            <input id="wz-city" type="text" value={data.cityVillage || ''} onChange={(e) => onChange({ cityVillage: e.target.value })} placeholder="Enter City/Town/Village" className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none" />
+            <label htmlFor="wz-city" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {lb('cityVillage', t('wizard.cityVillage'))}
+            </label>
+            <select
+              id="wz-city"
+              value={CITIES.includes(data.cityVillage) ? data.cityVillage : '__other__'}
+              onChange={(e) => {
+                if (e.target.value === '__other__') {
+                  onChange({ cityVillage: '' });
+                } else {
+                  onChange({ cityVillage: e.target.value });
+                }
+              }}
+              className={selectCls}
+            >
+              <option value="">Select City / Town / Village</option>
+              {citiesForDistrict.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value="__other__">Other (type manually)</option>
+            </select>
+            {!CITIES.includes(data.cityVillage) && data.cityVillage !== '' && (
+              <input
+                type="text"
+                value={data.cityVillage || ''}
+                onChange={(e) => onChange({ cityVillage: e.target.value })}
+                placeholder="Type city / town / village name"
+                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
+              />
+            )}
+            {!CITIES.includes(data.cityVillage) && data.cityVillage === '' && (
+              <input
+                type="text"
+                value=""
+                onChange={(e) => onChange({ cityVillage: e.target.value })}
+                placeholder="Type city / town / village name"
+                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
+              />
+            )}
           </div>
         )}
       </div>
 
       {en('locality') && (
         <div>
-          <label htmlFor="wz-locality" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('locality', t('wizard.locality'))}</label>
-          <input id="wz-locality" value={data.locality || ''} onChange={(e) => onChange({ locality: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+          <label htmlFor="wz-locality" className="mb-1.5 block text-sm font-medium text-gray-700">
+            {lb('locality', t('wizard.locality'))}
+          </label>
+          <input
+            id="wz-locality"
+            value={data.locality || ''}
+            onChange={(e) => onChange({ locality: e.target.value })}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+          />
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {en('landmark') && (
           <div>
-            <label htmlFor="wz-landmark" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('landmark', t('wizard.landmark'))}</label>
-            <input id="wz-landmark" value={data.landmark || ''} onChange={(e) => onChange({ landmark: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+            <label htmlFor="wz-landmark" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {lb('landmark', t('wizard.landmark'))}
+            </label>
+            <input
+              id="wz-landmark"
+              value={data.landmark || ''}
+              onChange={(e) => onChange({ landmark: e.target.value })}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+            />
           </div>
         )}
         {en('pincode') && (
           <div>
-            <label htmlFor="wz-pincode" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('pincode', t('wizard.pincode'))}</label>
-            <input id="wz-pincode" value={data.pincode || ''} onChange={(e) => onChange({ pincode: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm" />
+            <label htmlFor="wz-pincode" className="mb-1.5 block text-sm font-medium text-gray-700">
+              {lb('pincode', t('wizard.pincode'))}
+            </label>
+            <input
+              id="wz-pincode"
+              value={data.pincode || ''}
+              onChange={(e) => onChange({ pincode: e.target.value })}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+            />
           </div>
         )}
       </div>
 
       {en('address') && (
         <div>
-          <label htmlFor="wz-address" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('address', t('wizard.address'))}</label>
+          <label htmlFor="wz-address" className="mb-1.5 block text-sm font-medium text-gray-700">
+            {lb('address', t('wizard.address'))}
+          </label>
           <textarea
             id="wz-address"
             rows={2}
@@ -239,7 +403,9 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
 
       {en('mapLocation') && (
         <div>
-          <label htmlFor="wz-map-location" className="mb-1.5 block text-sm font-medium text-gray-700">{lb('mapLocation', t('wizard.mapLocation'))}</label>
+          <label htmlFor="wz-map-location" className="mb-1.5 block text-sm font-medium text-gray-700">
+            {lb('mapLocation', t('wizard.mapLocation'))}
+          </label>
           <input
             id="wz-map-location"
             value={data.mapLocation || ''}
@@ -247,12 +413,13 @@ export default function Step2Location({ data, onChange, fieldConfig = {} }) {
             placeholder={t('wizard.mapLocationPlaceholder')}
             className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm mb-2"
           />
-          
           <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-300 shadow-sm mt-3 z-0">
             <div id="wizard-map" className="w-full h-full" />
           </div>
         </div>
       )}
+
+      <StepExtraFields step={2} data={data} onChange={onChange} propertyFields={propertyFields} />
     </div>
   );
 }

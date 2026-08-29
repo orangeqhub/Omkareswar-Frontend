@@ -6,11 +6,13 @@
   },
   "documents": {
     "title": "Documents",
+    "site": "Site Document",
+    "link": "Link Document",
     "identityProof": "Identity Proof",
-    "ownershipProof": "Ownership Documents",
     "uploadPrompt": "Click to upload",
     "replace": "Replace",
     "uploadedFile": "Uploaded: {{name}}",
+    "uploadedAt": "Uploaded on {{date}}",
     "acceptedFormats": "PDF, JPG, JPEG or PNG"
   },
   "registration": {
@@ -134,6 +136,7 @@
     "setPrimary": "Set as Primary",
     "caption": "Caption",
     "captionPlaceholder": "Add a short caption (optional)",
+    "uploadedAt": "Uploaded on {{date}}",
     "remove": "Remove",
     "replace": "Replace",
     "required": "Required",
@@ -157,7 +160,6 @@
       "layoutPlan": "Layout Plan",
       "locationMap": "Location Map",
       "nearbyLandmark": "Nearby Landmark",
-      "approvalDocument": "Approval Document",
       "waterSource": "Water Source",
       "electricityAccess": "Electricity Access"
     },

@@ -9,6 +9,7 @@ import { matchesSearch } from '../../utils/search';
 import { getLocalizedField } from '../../utils/localize';
 import SearchBox from '../../components/common/SearchBox';
 import EmptyState from '../../components/common/EmptyState';
+import CompletionBadge from '../../components/dashboard/CompletionBadge';
 
 const STATUSES = ['submitted', 'in_review', 'changes_requested', 'recommended_approval', 'recommended_rejection', 'completed'];
 
@@ -82,6 +83,7 @@ export default function Properties() {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{t(`moderationStatus.${p.moderationStatus}`)}</span>
+                  <CompletionBadge score={p.completionScore} />
                   {isOverdue(p) && <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">{t('filters.overdue')}</span>}
                 </div>
               </div>

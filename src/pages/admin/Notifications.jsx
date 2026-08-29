@@ -1,22 +1,31 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../../services/notificationService';
 import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { getLocalizedField } from '../../utils/localize';
+import { resolveNotificationRoute } from '../../utils/notificationRoutes';
 import EmptyState from '../../components/common/EmptyState';
 
 export default function Notifications() {
   const { user } = useAuthStore();
   const language = useLanguageStore((s) => s.language);
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    if (user) notificationService.getForUser({ role: user.role, userId: user.id }).then(setNotifications);
+    if (user) notificationService.getForUser().then(setNotifications);
   }, [user]);
 
   async function handleMarkRead(id) {
     await notificationService.markRead(id);
     setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  }
+
+  function handleOpen(n) {
+    handleMarkRead(n.id);
+    const route = resolveNotificationRoute(user, n);
+    if (route) navigate(route);
   }
 
   if (notifications.length === 0) return <EmptyState titleKey="empty.noNotifications" />;
@@ -27,7 +36,7 @@ export default function Notifications() {
         <button
           key={n.id}
           type="button"
-          onClick={() => handleMarkRead(n.id)}
+          onClick={() => handleOpen(n)}
           className={`block w-full rounded-xl border px-4 py-3 text-left text-sm ${n.read ? 'border-gray-200 text-gray-500' : 'border-brand-200 bg-brand-50 font-medium text-gray-800'}`}
         >
           {getLocalizedField(n, 'title', language)}

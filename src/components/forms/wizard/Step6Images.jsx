@@ -11,8 +11,9 @@ import { useLanguageStore } from '../../../store/languageStore';
 import { toast } from '../../../store/toastStore';
 import ImageSlotUploader from '../ImageSlotUploader';
 import DocumentUploader from '../DocumentUploader';
+import StepExtraFields from './StepExtraFields';
 
-export default function Step6Images({ data, onChange }) {
+export default function Step6Images({ data, onChange, propertyFields = [] }) {
   const { t } = useTranslation('forms');
   const language = useLanguageStore((s) => s.language);
   const [errors, setErrors] = useState({});
@@ -45,7 +46,6 @@ export default function Step6Images({ data, onChange }) {
   }, [data.images]);
 
   const completedCount = slots.filter((s) => imagesBySlot[s.id]).length;
-  const hasPrimary = data.images.some((img) => img.isPrimary);
 
   async function handleUpload(slot, file) {
     const existingFingerprints = data.images.filter((i) => i.slotId !== slot.id).map((i) => i.fingerprint);
@@ -83,7 +83,7 @@ export default function Step6Images({ data, onChange }) {
     const nextImages = data.images.filter((i) => i.slotId !== slot.id);
     const isFirstImage = data.images.length === 0;
     const isPrimary = isFirstImage && slot.primaryEligible;
-    nextImages.push({ slotId: slot.id, url, caption: '', isPrimary, fingerprint: result.fingerprint, fileName: file.name });
+    nextImages.push({ slotId: slot.id, url, caption: '', isPrimary, fingerprint: result.fingerprint, fileName: file.name, uploadedAt: new Date().toISOString() });
     onChange({ images: nextImages });
   }
 
@@ -125,7 +125,7 @@ export default function Step6Images({ data, onChange }) {
       return;
     }
 
-    onChange({ documents: { ...data.documents, [kind]: { url, fileName: file.name } } });
+    onChange({ documents: { ...data.documents, [kind]: { url, fileName: file.name, uploadedAt: new Date().toISOString() } } });
   }
 
   const structureSummary = building
@@ -140,9 +140,6 @@ export default function Step6Images({ data, onChange }) {
         <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-brand-700">{t('media.progressTitle')}</p>
         <p className="mt-1 text-sm text-gray-700">{t('media.progress', { completed: completedCount, total: slots.length })}</p>
         <p className="mt-2 text-xs text-gray-500">{t('media.noExtraLimitNotice')}</p>
-        {!hasPrimary && data.images.length > 0 && (
-          <p className="mt-2 text-xs font-medium text-red-600">{t('media.error.primaryRequired')}</p>
-        )}
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -150,8 +147,6 @@ export default function Step6Images({ data, onChange }) {
           <ImageSlotUploader
             key={slot.id}
             label={resolveSlotLabel(slot, language, t, slot.index ?? undefined)}
-            required={slot.required}
-            captionRequired={slot.captionRequired}
             primaryEligible={slot.primaryEligible}
             image={imagesBySlot[slot.id]}
             isPrimary={Boolean(imagesBySlot[slot.id]?.isPrimary)}
@@ -168,19 +163,27 @@ export default function Step6Images({ data, onChange }) {
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-700">{t('documents.title')}</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <DocumentUploader
+            label={t('documents.site')}
+            document={data.documents?.site}
+            onUpload={(file) => handleUploadDocument('site', file)}
+            error={errors.site}
+          />
+          <DocumentUploader
+            label={t('documents.link')}
+            document={data.documents?.link}
+            onUpload={(file) => handleUploadDocument('link', file)}
+            error={errors.link}
+          />
+          <DocumentUploader
             label={t('documents.identityProof')}
             document={data.documents?.identityProof}
             onUpload={(file) => handleUploadDocument('identityProof', file)}
             error={errors.identityProof}
           />
-          <DocumentUploader
-            label={t('documents.ownershipProof')}
-            document={data.documents?.ownershipProof}
-            onUpload={(file) => handleUploadDocument('ownershipProof', file)}
-            error={errors.ownershipProof}
-          />
         </div>
       </div>
+
+      <StepExtraFields step={6} data={data} onChange={onChange} propertyFields={propertyFields} />
     </div>
   );
 }

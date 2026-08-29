@@ -15,8 +15,17 @@ import { toast } from '../../store/toastStore';
 import { resolveMediaUrl } from '../../store/url';
 import DocumentPreview from '../../components/employee/DocumentPreview';
 import InternalNotesPanel from '../../components/employee/InternalNotesPanel';
+import CompletionScoreCard from '../../components/dashboard/CompletionScoreCard';
+import { CATEGORY_DYNAMIC_FIELDS, getFieldLabel } from '../../config/propertyFieldDefinitions';
+import AmenityIcon from '../../components/common/AmenityIcon';
 
 const FIELD_OPTIONS = ['titleEn', 'descriptionEn', 'price', 'area', 'locationEn', 'amenities', 'approvals'];
+
+const DOC_LABELS = {
+  site: 'Site Document',
+  link: 'Link Document',
+  identityProof: 'Identity Proof',
+};
 
 export default function PropertyModerationDetail() {
   const { id } = useParams();
@@ -68,6 +77,47 @@ export default function PropertyModerationDetail() {
 
     return { slots, imagesBySlot, missing, duplicates };
   }, [property, rule]);
+
+  const dynamicFactEntries = useMemo(() => {
+    if (!property?.dynamicFields) return [];
+    const catFields = (CATEGORY_DYNAMIC_FIELDS[property.categorySlug] || {}).fields || [];
+    const entries = [];
+
+    catFields.forEach((field) => {
+      const val = property.dynamicFields[field.id];
+      if (field.type === 'direction') {
+        const bVal = property.dynamicFields[field.boundaryId];
+        const fVal = property.dynamicFields[field.feetId];
+        if ((bVal && bVal.trim()) || (fVal && fVal !== '' && fVal !== '0')) {
+          const parts = [];
+          if (bVal && bVal.trim()) parts.push(bVal.trim());
+          if (fVal && fVal !== '' && fVal !== '0') parts.push(`${fVal} Feet`);
+          entries.push([field.label, parts.join(' — ')]);
+        }
+        return;
+      }
+      if (val === undefined || val === null || val === '') return;
+      if (field.type === 'document') {
+        entries.push([
+          field.label,
+          <a key={field.id} href={resolveMediaUrl(String(val))} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 underline">
+            View Document
+          </a>,
+        ]);
+        return;
+      }
+      entries.push([field.label, field.type === 'checkbox' ? (val ? 'Yes' : 'No') : String(val)]);
+    });
+
+    Object.keys(property.dynamicFields).forEach((key) => {
+      if (catFields.some((f) => f.id === key)) return;
+      const val = property.dynamicFields[key];
+      if (val === undefined || val === null || val === '') return;
+      entries.push([getFieldLabel(key), String(val)]);
+    });
+
+    return entries;
+  }, [property]);
 
   if (property === null) return null;
   if (!property) return <div className="text-center text-sm text-gray-500">{t('moderation.noRecordsFound')}</div>;
@@ -131,22 +181,83 @@ export default function PropertyModerationDetail() {
               <div><dt className="text-xs uppercase text-gray-400">{t('wizard.area', { ns: 'forms' })}</dt><dd className="text-sm text-gray-800">{property.area} {property.areaUnit}</dd></div>
               <div><dt className="text-xs uppercase text-gray-400">{t('table.location')}</dt><dd className="text-sm text-gray-800 lang-te">{getLocalizedField(property, 'location', language)}</dd></div>
               <div><dt className="text-xs uppercase text-gray-400">{t('verification.assignedDate')}</dt><dd className="text-sm text-gray-800">{property.assignedAt ? new Date(property.assignedAt).toLocaleDateString() : '-'}</dd></div>
+              <div><dt className="text-xs uppercase text-gray-400">Uploaded</dt><dd className="text-sm text-gray-800">{property.postedDate || property.createdAt ? new Date(property.postedDate || property.createdAt).toLocaleString() : '-'}</dd></div>
               <div><dt className="text-xs uppercase text-gray-400">{t('verification.dueDate')}</dt><dd className="text-sm text-gray-800">{property.dueDate ? new Date(property.dueDate).toLocaleDateString() : '-'}</dd></div>
             </dl>
             <p className="mt-3 whitespace-pre-line text-sm text-gray-700 lang-te">{getLocalizedField(property, 'description', language)}</p>
           </div>
 
           <div className="rounded-xl border border-gray-200 p-4">
+            <h2 className="text-sm font-semibold text-brand-800">{t('detail.locationTitle', { ns: 'properties', defaultValue: 'Location Details' })}</h2>
+            <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+              {[
+                [t('wizard.state', { ns: 'forms' }), property.state],
+                [t('wizard.district', { ns: 'forms' }), property.district],
+                [t('wizard.mandal', { ns: 'forms' }), property.mandal],
+                [t('wizard.cityVillage', { ns: 'forms' }), property.city],
+                [t('wizard.locality', { ns: 'forms' }), property.locality],
+                [t('wizard.landmark', { ns: 'forms' }), property.landmark],
+                [t('wizard.pincode', { ns: 'forms' }), property.pincode],
+                [t('wizard.address', { ns: 'forms' }), property.address],
+              ]
+                .filter(([, v]) => v !== undefined && v !== null && v !== '')
+                .map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-xs uppercase text-gray-400">{label}</dt>
+                    <dd className="break-words text-sm text-gray-800">{value}</dd>
+                  </div>
+                ))}
+              {(() => {
+                const mapLink =
+                  property.mapLocation ||
+                  (property.mapLat && property.mapLng ? `https://maps.google.com/?q=${property.mapLat},${property.mapLng}` : '');
+                return mapLink ? (
+                  <div>
+                    <dt className="text-xs uppercase text-gray-400">{t('wizard.mapLocation', { ns: 'forms' })}</dt>
+                    <dd className="break-words text-sm text-gray-800">
+                      <a href={mapLink} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 underline">
+                        View on Map
+                      </a>
+                    </dd>
+                  </div>
+                ) : null;
+              })()}
+            </dl>
+          </div>
+
+          <CompletionScoreCard
+            score={property.completionScore}
+            sections={property.completionSections}
+            title={t('scorecard.title', { ns: 'common', defaultValue: 'Property Completion Score' })}
+          />
+
+          <div className="rounded-xl border border-gray-200 p-4">
             <h2 className="text-sm font-semibold text-brand-800">{t('moderation.sellerDetails')}</h2>
-            <p className="mt-2 text-sm text-gray-700">{property.contactName} &middot; {property.contactPhone}</p>
+            <p className="mt-2 text-sm text-gray-700">
+              {property.seller?.name || property.contactName} &middot; {property.seller?.mobile || property.contactPhone}
+            </p>
           </div>
 
           {property.amenities?.length > 0 && (
             <div className="rounded-xl border border-gray-200 p-4">
               <h2 className="text-sm font-semibold text-brand-800">{t('detail.amenities', { ns: 'properties' })}</h2>
               <div className="mt-2 flex flex-wrap gap-2">
-                {property.amenities.map((a) => <span key={a} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{a}</span>)}
+                {property.amenities.map((a) => <span key={a} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800"><AmenityIcon amenity={a} size={12} className="text-brand-600" />{a}</span>)}
               </div>
+            </div>
+          )}
+
+          {dynamicFactEntries.length > 0 && (
+            <div className="rounded-xl border border-gray-200 p-4">
+              <h2 className="mb-2 text-sm font-semibold text-brand-800">{t('moderation.categoryDetails')}</h2>
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
+                {dynamicFactEntries.map(([label, display]) => (
+                  <div key={label}>
+                    <dt className="text-xs uppercase text-gray-400">{label}</dt>
+                    <dd className="break-words text-sm text-gray-800">{display}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           )}
 
@@ -171,6 +282,7 @@ export default function PropertyModerationDetail() {
                     <p className="mt-1 truncate text-xs text-gray-600">{resolveSlotLabel(slot, language, t)}</p>
                     {img?.isPrimary && <span className="text-[10px] font-semibold text-amber-600">{t('media.primaryImage', { ns: 'forms' })}</span>}
                     {img?.caption && <p className="truncate text-[10px] text-gray-400">{img.caption}</p>}
+                    {img?.createdAt && <p className="text-[10px] text-gray-400">{new Date(img.createdAt).toLocaleString()}</p>}
                   </div>
                 );
               })}
@@ -178,8 +290,14 @@ export default function PropertyModerationDetail() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DocumentPreview title={t('document.types.ownershipDocument')} fileName="ownership-doc.pdf" uploadDate={property.postedDate} />
-            <DocumentPreview title={t('document.types.approvalDocument')} fileName="approval-doc.pdf" uploadDate={property.postedDate} />
+            {(property.documents?.length > 0 ? property.documents : []).map((doc) => (
+              <DocumentPreview
+                key={doc.id}
+                title={DOC_LABELS[doc.type] || doc.type}
+                fileName={doc.originalName || doc.url?.split('/').pop() || t('document.noFile')}
+                uploadDate={doc.createdAt || property.postedDate}
+              />
+            ))}
           </div>
 
           {property.moderationHistory?.length > 0 && (

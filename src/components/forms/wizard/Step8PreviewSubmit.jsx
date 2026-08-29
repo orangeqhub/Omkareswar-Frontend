@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { getCategoryBySlug } from '../../../config/categories';
 import { useLanguageStore } from '../../../store/languageStore';
 import { resolveMediaUrl } from '../../../store/url';
+import AmenityIcon from '../../common/AmenityIcon';
 
 export default function Step8PreviewSubmit({ data }) {
   const { t } = useTranslation('properties');
@@ -26,10 +27,13 @@ export default function Step8PreviewSubmit({ data }) {
         <p className="text-sm text-gray-600">{data.locality}, {data.cityVillage}, {data.district}</p>
         <p className="text-sm text-gray-600">{data.area} {data.areaUnit}</p>
         <p className="whitespace-pre-line text-sm text-gray-700">{data.descriptionEn}</p>
-        {data.amenities.length > 0 && (
+        {(data.amenities || []).length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {data.amenities.map((a) => (
-              <span key={a} className="rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">{a}</span>
+            {(data.amenities || []).map((a) => (
+              <span key={a} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs text-brand-800">
+                <AmenityIcon amenity={a} size={12} className="text-brand-600" />
+                {a}
+              </span>
             ))}
           </div>
         )}
@@ -37,7 +41,7 @@ export default function Step8PreviewSubmit({ data }) {
           {data.images.length} {t('detail.images')}
         </p>
         <p className="text-sm text-gray-600">
-          {data.documents?.identityProof && data.documents?.ownershipProof
+          {['site', 'link', 'identityProof'].some((kind) => data.documents?.[kind])
             ? t('detail.documentsAttached')
             : t('detail.documentsMissing')}
         </p>

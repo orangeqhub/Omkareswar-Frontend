@@ -68,8 +68,9 @@ export function createEmptyWizardData() {
     // Step 6
     images: [],
     documents: {
+      site: null,
+      link: null,
       identityProof: null,
-      ownershipProof: null,
     },
 
     // Step 7

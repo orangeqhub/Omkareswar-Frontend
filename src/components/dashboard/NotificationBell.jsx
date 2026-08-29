@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
 import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { getLocalizedField } from '../../utils/localize';
+import { resolveNotificationRoute } from '../../utils/notificationRoutes';
 
 export default function NotificationBell() {
   const { t } = useTranslation('common');
   const { user } = useAuthStore();
   const language = useLanguageStore((s) => s.language);
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const ref = useRef(null);
@@ -38,6 +41,13 @@ export default function NotificationBell() {
     setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n)));
   }
 
+  function handleOpenNotification(n) {
+    handleMarkRead(n.id);
+    setOpen(false);
+    const route = resolveNotificationRoute(user, n);
+    if (route) navigate(route);
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -63,7 +73,7 @@ export default function NotificationBell() {
                 <li key={n.id}>
                   <button
                     type="button"
-                    onClick={() => handleMarkRead(n.id)}
+                    onClick={() => handleOpenNotification(n)}
                     className={`block w-full border-b border-gray-50 px-4 py-3 text-left text-sm last:border-0 ${
                       n.read ? 'text-gray-500' : 'font-medium text-gray-800 bg-brand-50/50'
                     }`}

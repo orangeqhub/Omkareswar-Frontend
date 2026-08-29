@@ -19,20 +19,30 @@ import {
   HeartPulse,
   ShoppingCart,
   Bus,
+  Download,
+  FileText,
+  Images,
 } from 'lucide-react';
 import { propertyService } from '../../services/propertyService';
 import { cmsService } from '../../services/cmsService';
 import { enquiryService } from '../../services/enquiryService';
 import { settingsService } from '../../services/settingsService';
-import { CATEGORY_DYNAMIC_FIELDS } from '../../config/propertyFieldDefinitions';
+import { CATEGORY_DYNAMIC_FIELDS, getFieldLabel } from '../../config/propertyFieldDefinitions';
+import {
+  LEGACY_DUPLICATE_ALIASES,
+  LEGACY_DUPLICATE_LABELS,
+  canonicalFieldId,
+} from '../../components/forms/wizard/dynamicFieldFilters';
 import apiClient from '../../services/apiClient';
+import { resolveMediaUrl } from '../../store/url';
 import { visitService } from '../../services/visitService';
 import { useAuthStore } from '../../store/authStore';
 import { useFavouritesStore } from '../../store/favouritesStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCompareStore } from '../../store/compareStore';
 import { useLanguageStore } from '../../store/languageStore';
-import { getLocalizedField } from '../../utils/localize';
+import { getLocalizedField, getPublicAddress } from '../../utils/localize';
+import { isBuildingType } from '../../utils/wizardDefaults';
 import { buildTelLink, buildWhatsAppLink } from '../../utils/contactLinks';
 import { toast } from '../../store/toastStore';
 import ImageGallery from '../../components/properties/ImageGallery';
@@ -40,6 +50,7 @@ import ScheduleVisitModal from '../../components/properties/ScheduleVisitModal';
 import PropertyCard from '../../components/properties/PropertyCard';
 import HomeLoanCalculator from '../../components/properties/HomeLoanCalculator';
 import EmptyState from '../../components/common/EmptyState';
+import AmenityIcon from '../../components/common/AmenityIcon';
 
 function formatPrice(property) {
   if (!property.price || isNaN(Number(property.price))) return 'Price on Request';
@@ -58,6 +69,51 @@ function maskContactDetails(text, isTelugu) {
   return text
     .replace(phoneRegex, phoneReplacement)
     .replace(emailRegex, emailReplacement);
+}
+
+function canViewPropertyDocuments(user, property) {
+  if (!user || !property) return false;
+  if (user.role === 'admin') return true;
+  if (user.id === property.sellerId) return true;
+  const assignedId =
+    property.assignedEmployeeId ||
+    property.assignedEmployee?.id ||
+    property.assignedMediatorId ||
+    property.assignedMediator?.id;
+  return Boolean(assignedId && user.id === assignedId);
+}
+
+function getDocumentDisplayName(doc) {
+  const labelMap = {
+    site: 'Site Document',
+    link: 'Link Document',
+    identityProof: 'Identity Proof',
+  };
+  if (doc.type && labelMap[doc.type]) return labelMap[doc.type];
+  if (doc.originalName) return doc.originalName;
+  if (doc.label) return doc.label;
+  const name = (doc.url || doc.filePath || doc.path || '').split('/').pop();
+  return name || 'Document';
+}
+
+async function downloadMedia(url, filename) {
+  const absUrl = resolveMediaUrl(url);
+  const fallbackName = filename || absUrl.split('/').pop() || 'download';
+  try {
+    const res = await fetch(absUrl);
+    if (!res.ok) throw new Error('FETCH_FAILED');
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = fallbackName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(absUrl, '_blank', 'noopener,noreferrer');
+  }
 }
 
 function getHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -143,18 +199,55 @@ export default function PropertyDetail() {
   const dynamicFacts = useMemo(() => {
     if (!property || !property.dynamicFields) return [];
     const list = [];
+
+    const hasValue = (v) => {
+      if (v === undefined || v === null) return false;
+      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === 'string' && v.trim() === '') return false;
+      if (typeof v === 'number' && v === 0) return false;
+      return true;
+    };
+
+    // Canonical attributes already visible via the structure/plotDetails/price facts,
+    // so a dynamic field representing the same thing is not rendered a second time.
+    // Survey Number and adminOnly-marked fields are sensitive: only admins and the assigned employee may see them.
+    const privileged = user?.role === 'admin' || (Boolean(user) && user.id === (property.assignedEmployeeId || property.assignedEmployee?.id));
+    const seen = new Set();
+    if (!privileged) seen.add('dyn_surveyNumber');
+    const structure = property.structure || {};
+    const plotDetails = property.plotDetails || {};
+    const structureShown =
+      isBuildingType(property.ruleKey) &&
+      (structure.bedrooms || structure.bathrooms || structure.halls || structure.balconies);
+    if (structureShown) {
+      Object.keys(structure).forEach((k) => { if (hasValue(structure[k])) seen.add(k); });
+    }
+    Object.keys(plotDetails).forEach((k) => { if (hasValue(plotDetails[k])) seen.add(k); });
+    ['area', 'areaUnit', 'pricePerUnit'].forEach((k) => { if (hasValue(property[k])) seen.add(k); });
+
     fields.forEach((field) => {
       const val = property.dynamicFields[field.id];
       if (field.type === 'direction') {
         const bVal = property.dynamicFields[field.boundaryId];
         const fVal = property.dynamicFields[field.feetId];
         if ((bVal && bVal.trim()) || (fVal && fVal !== '' && fVal !== '0')) {
+          if (seen.has(field.id)) return;
           const parts = [];
           if (bVal && bVal.trim()) parts.push(bVal.trim());
           if (fVal && fVal !== '' && fVal !== '0') parts.push(`${fVal} Feet`);
           list.push([field.label, parts.join(' — ')]);
+          seen.add(field.id);
         }
-      } else if (val !== undefined && val !== null && val !== '') {
+        return;
+      }
+      const canonical = canonicalFieldId(field.id);
+      if (field.adminOnly && !privileged) { seen.add(canonical); return; }
+      if (seen.has(canonical)) return;
+      if (val !== undefined && val !== null && val !== '') {
+        if (field.type === 'document' && !canViewPropertyDocuments(user, property)) {
+          seen.add(canonical);
+          return;
+        }
         if (field.type === 'document') {
           list.push([
             field.label,
@@ -167,32 +260,41 @@ export default function PropertyDetail() {
         } else {
           list.push([field.label, String(val)]);
         }
+        seen.add(canonical);
       }
     });
 
     // Fallback in case configuration changed or dynamic fields were manually created
     Object.keys(property.dynamicFields).forEach((key) => {
-      const fieldConfig = fields.find((f) => f.id === key);
-      if (!fieldConfig) {
-        const val = property.dynamicFields[key];
-        if (val !== undefined && val !== null && val !== '') {
-          if (typeof val === 'string' && (val.includes('/uploads/') || val.endsWith('.pdf') || val.endsWith('.jpg') || val.endsWith('.png'))) {
-            list.push([
-              key,
-              <a key={key} href={val.startsWith('http') ? val : apiClient.defaults.baseURL + val} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline font-semibold">
-                View File
-              </a>
-            ]);
-          } else if (typeof val === 'boolean') {
-            list.push([key, val ? 'Yes' : 'No']);
-          } else {
-            list.push([key, String(val)]);
-          }
+      if (fields.some((f) => f.id === key)) return;
+      const val = property.dynamicFields[key];
+      if (!hasValue(val)) return;
+      const canonical = canonicalFieldId(key);
+      if (seen.has(canonical)) return;
+      const alias = LEGACY_DUPLICATE_ALIASES[key];
+      const label = alias
+        ? getFieldLabel(alias)
+        : LEGACY_DUPLICATE_LABELS[key] || getFieldLabel(key);
+      if (typeof val === 'string' && (val.includes('/uploads/') || val.endsWith('.pdf') || val.endsWith('.jpg') || val.endsWith('.png'))) {
+        if (!canViewPropertyDocuments(user, property)) {
+          seen.add(canonical);
+          return;
         }
+        list.push([
+          label,
+          <a key={key} href={val.startsWith('http') ? val : apiClient.defaults.baseURL + val} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline font-semibold">
+            View File
+          </a>
+        ]);
+      } else if (typeof val === 'boolean') {
+        list.push([label, val ? 'Yes' : 'No']);
+      } else {
+        list.push([label, String(val)]);
       }
+      seen.add(canonical);
     });
     return list;
-  }, [property, fields]);
+  }, [property, fields, user]);
 
   useEffect(() => {
     settingsService.getPublicSettings()
@@ -200,7 +302,8 @@ export default function PropertyDetail() {
         const customFields = res?.propertyFields || [];
         const catFields = Object.values(CATEGORY_DYNAMIC_FIELDS).flatMap((cat) => cat.fields);
         const allFieldIds = new Set(catFields.map((f) => f.id));
-        const merged = [...catFields, ...customFields.filter((f) => !allFieldIds.has(f.id))];
+        const merged = [...catFields, ...customFields.filter((f) => !allFieldIds.has(f.id))]
+          .filter((f, i, arr) => arr.findIndex((x) => x.id === f.id) === i);
         setFields(merged);
       })
       .catch((err) => console.error('Failed to load fields:', err));
@@ -379,12 +482,18 @@ export default function PropertyDetail() {
   }
 
   const title = getLocalizedField(property, 'title', language);
-  const location = getLocalizedField(property, 'location', language);
+  const isPrivileged = user?.role === 'admin' || (Boolean(user) && user.id === (property.assignedEmployeeId || property.assignedEmployee?.id));
+  const canViewDocuments = canViewPropertyDocuments(user, property);
+  const location = isPrivileged ? getLocalizedField(property, 'location', language) : getPublicAddress(property);
   const rawDescription = getLocalizedField(property, 'description', language);
   const description = maskContactDetails(rawDescription, language === 'te');
+  const building = isBuildingType(property.ruleKey);
+  const hasStructureCounts = (s = {}) =>
+    [s.bedrooms, s.bathrooms, s.halls, s.balconies].some((n) => typeof n === 'number' && n > 0);
 
+  const seenFactLabels = new Set();
   const facts = [
-    ...(property.structure
+    ...(building && property.structure && hasStructureCounts(property.structure)
       ? [
           [t('detail.bedroomsLabel'), property.structure.bedrooms],
           [t('detail.bathroomsLabel'), property.structure.bathrooms],
@@ -393,7 +502,7 @@ export default function PropertyDetail() {
           [t('detail.facingLabel'), property.structure.facing],
           [t('detail.furnishingLabel'), property.structure.furnishing],
           [t('detail.parkingLabel'), property.structure.parking],
-          [t('detail.floorLabel'), `${property.structure.propertyFloor}/${property.structure.floors}`],
+          [t('detail.floorLabel'), [property.structure.propertyFloor, property.structure.floors].filter(Boolean).join('/')],
           [t('detail.ageLabel'), property.structure.ageOfProperty],
         ]
       : []),
@@ -401,7 +510,15 @@ export default function PropertyDetail() {
       ? Object.entries(property.plotDetails).map(([k, v]) => [k, Array.isArray(v) ? v.join(', ') : v])
       : []),
     ...dynamicFacts,
-  ].filter(([, v]) => v !== undefined && v !== null && v !== '');
+  ].filter(([label, v]) => {
+    if (v === undefined || v === null) return false;
+    if (typeof v === 'string' && v.trim() === '') return false;
+    if (typeof v === 'number' && v === 0) return false;
+    const key = String(label).toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!key || seenFactLabels.has(key)) return false;
+    seenFactLabels.add(key);
+    return true;
+  });
 
   const getNearbyPlaces = (city) => {
     const cityName = city || 'Guntur';
@@ -672,8 +789,8 @@ export default function PropertyDetail() {
 
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
             <span>{t('detail.propertyId')}: {property.propertyCode}</span>
-            <span>{t('detail.postedDate')}: {new Date(property.postedDate).toLocaleDateString()}</span>
-            <span>{t('detail.updatedDate')}: {new Date(property.updatedDate).toLocaleDateString()}</span>
+            <span>{t('detail.postedDate')}: {property.postedDate || property.createdAt ? new Date(property.postedDate || property.createdAt).toLocaleString() : '-'}</span>
+            <span>{t('detail.updatedDate')}: {property.updatedDate || property.postedDate ? new Date(property.updatedDate || property.postedDate).toLocaleString() : '-'}</span>
             <span className="flex items-center gap-1"><Eye size={14} /> {t('detail.views', { count: property.views })}</span>
           </div>
 
@@ -701,8 +818,121 @@ export default function PropertyDetail() {
               <h2 className="text-lg font-semibold text-brand-800">{t('detail.amenities')}</h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 {property.amenities.map((a) => (
-                  <span key={a} className="rounded-full bg-brand-50 px-3 py-1.5 text-sm text-brand-800">{a}</span>
+                  <span key={a} className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-sm text-brand-800">
+                    <AmenityIcon amenity={a} size={14} className="text-brand-600" />
+                    {a}
+                  </span>
                 ))}
+              </div>
+</section>
+        )}
+
+          {isPrivileged && (
+            <section className="mt-8">
+              <h2 className="text-lg font-semibold text-brand-800">
+                {language === 'te' ? 'పూర్తి చిరునామా వివరాలు' : 'Location Details'}
+              </h2>
+              <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                {[
+                  [t('wizard.state', { ns: 'forms' }), property.state],
+                  [t('wizard.district', { ns: 'forms' }), property.district],
+                  [t('wizard.mandal', { ns: 'forms' }), property.mandal],
+                  [t('wizard.cityVillage', { ns: 'forms' }), property.city],
+                  [t('wizard.locality', { ns: 'forms' }), property.locality],
+                  [t('wizard.landmark', { ns: 'forms' }), property.landmark],
+                  [t('wizard.pincode', { ns: 'forms' }), property.pincode],
+                  [t('wizard.address', { ns: 'forms' }), property.address],
+                ]
+                  .filter(([, v]) => v !== undefined && v !== null && v !== '')
+                  .map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
+                      <dd className="text-sm font-medium text-gray-800">{String(value)}</dd>
+                    </div>
+                  ))}
+                {(() => {
+                  const mapLink =
+                    property.mapLocation ||
+                    (property.mapLat && property.mapLng
+                      ? `https://maps.google.com/?q=${property.mapLat},${property.mapLng}`
+                      : '');
+                  return mapLink ? (
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-gray-400">{t('wizard.mapLocation', { ns: 'forms' })}</dt>
+                      <dd className="text-sm font-medium text-gray-800">
+                        <a href={mapLink} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 hover:underline">
+                          View on Map
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null;
+                })()}
+              </dl>
+            </section>
+          )}
+
+          {canViewDocuments && (
+            <section className="mt-8">
+              <h2 className="text-lg font-semibold text-brand-800">
+                {language === 'te' ? 'డాక్యుమెంట్లు & డౌన్‌లోడ్లు' : 'Documents & Downloads'}
+              </h2>
+              <p className="mt-1 text-xs text-gray-400">
+                {language === 'te'
+                  ? 'డాక్యుమెంట్లు మరియు ఫైళ్లు ధృవీకరణ కోసం పోస్టర్ మరియు అడ్మిన్‌కు మాత్రమే కనిపిస్తాయి.'
+                  : 'Documents and files are visible only to the poster and admin for verification.'}
+              </p>
+              <div className="mt-3 space-y-3">
+                {property.documents?.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                      <FileText size={15} className="text-brand-600" />
+                      {language === 'te' ? 'డాక్యుమెంట్లు' : 'Documents'}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {property.documents.map((doc) => (
+                        <button
+                          key={doc.id || doc.url}
+                          type="button"
+                          onClick={() => downloadMedia(doc.url || doc.filePath || doc.path, getDocumentDisplayName(doc))}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                        >
+                          <Download size={14} /> {getDocumentDisplayName(doc)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {property.images?.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                      <Images size={15} className="text-brand-600" />
+                      {language === 'te' ? 'ప్రాపర్టీ ఇమేజెస్' : 'Property Images'}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => property.images.forEach((img, i) => {
+                          const name = `property-image-${i + 1}.jpg`;
+                          setTimeout(() => downloadMedia(img.url, name), i * 400);
+                        })}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                      >
+                        <Download size={14} /> {language === 'te' ? 'అన్ని ఇమేజెస్ డౌన్‌లోడ్ చేయండి' : 'Download All Images'}
+                      </button>
+                      {property.images.map((img, i) => (
+                        <button
+                          key={img.id || img.url}
+                          type="button"
+                          onClick={() => downloadMedia(img.url, `property-image-${i + 1}.jpg`)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                        >
+                          <Download size={14} /> {language === 'te' ? `ఇమేజ్ ${i + 1}` : `Image ${i + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           )}

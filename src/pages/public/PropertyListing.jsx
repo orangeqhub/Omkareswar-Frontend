@@ -13,6 +13,7 @@ import FilterPanel, { isResidentialCategory } from '../../components/properties/
 import MobileFilterDrawer from '../../components/properties/MobileFilterDrawer';
 import { PropertyCardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
+import { settingsService } from '../../services/settingsService';
 
 const PAGE_SIZE = 9;
 
@@ -32,7 +33,9 @@ export default function PropertyListing({ forcedCategorySlug }) {
     const isRes = slug ? isResidentialCategory(slug) : false;
 
     return {
-      city: searchParams.get('city') || selectedLocation || undefined,
+      state: searchParams.get('state') || undefined,
+      district: searchParams.get('district') || undefined,
+      city: searchParams.get('city') || (categorySlug ? undefined : selectedLocation || undefined),
       transactionType: searchParams.get('transactionType') || undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
@@ -44,11 +47,20 @@ export default function PropertyListing({ forcedCategorySlug }) {
     };
   });
 
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filterConfig, setFilterConfig] = useState(null);
+
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     let changed = false;
 
-    const allKeys = ['city', 'transactionType', 'minPrice', 'maxPrice', 'search', 'bedrooms', 'bathrooms', 'furnishing', 'categorySlug'];
+    const baseKeys = ['state', 'district', 'city', 'transactionType', 'minPrice', 'maxPrice', 'search', 'bedrooms', 'bathrooms', 'furnishing', 'categorySlug'];
+    const customKeys = Array.isArray(filterConfig?.custom) ? filterConfig.custom.map((c) => c.id) : [];
+    const allKeys = [...baseKeys, ...customKeys];
 
     allKeys.forEach((key) => {
       const valInFilters = filters[key];
@@ -70,12 +82,29 @@ export default function PropertyListing({ forcedCategorySlug }) {
     if (changed) {
       setSearchParams(params, { replace: true });
     }
-  }, [filters, searchParams, setSearchParams]);
-  const [sort, setSort] = useState('newest');
-  const [page, setPage] = useState(1);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(true);
+  }, [filters, searchParams, setSearchParams, filterConfig]);
+
+  useEffect(() => {
+    settingsService
+      .getPublicSettings()
+      .then((settings) => setFilterConfig(settings?.filterConfig || {}))
+      .catch(() => setFilterConfig({}));
+  }, []);
+
+  useEffect(() => {
+    if (!filterConfig) return;
+    const custom = Array.isArray(filterConfig?.custom) ? filterConfig.custom : [];
+    if (custom.length === 0) return;
+    const patch = {};
+    custom.forEach((c) => {
+      const v = searchParams.get(c.id);
+      if (v !== null && v !== '') patch[c.id] = c.type === 'number' ? Number(v) : v;
+    });
+    if (Object.keys(patch).length > 0) {
+      setFilters((prev) => ({ ...prev, ...patch }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterConfig]);
 
   const effectiveFilters = useMemo(
     () => ({ ...filters, categorySlug: category ? category.slug : filters.categorySlug, sort, page, pageSize: PAGE_SIZE * page }),
@@ -148,6 +177,7 @@ export default function PropertyListing({ forcedCategorySlug }) {
               onReset={handleReset}
               hideCategory={Boolean(category)}
               selectedCategorySlug={category ? category.slug : filters.categorySlug}
+              filterConfig={filterConfig}
             />
           </div>
         </aside>
@@ -211,6 +241,7 @@ export default function PropertyListing({ forcedCategorySlug }) {
         onReset={handleReset}
         hideCategory={Boolean(category)}
         selectedCategorySlug={category ? category.slug : filters.categorySlug}
+        filterConfig={filterConfig}
       />
     </div>
   );

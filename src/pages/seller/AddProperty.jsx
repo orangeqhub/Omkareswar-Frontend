@@ -4,9 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useDraftProperty } from '../../hooks/useDraftProperty';
 import { toast } from '../../store/toastStore';
-import { generateImageSlots } from '../../utils/mediaSlotGenerator';
-import { mediaRuleService } from '../../services/mediaRuleService';
-import { isBuildingType } from '../../utils/wizardDefaults';
 import WizardStepper from '../../components/forms/wizard/WizardStepper';
 import Step1BasicDetails from '../../components/forms/wizard/Step1BasicDetails';
 import Step2Location from '../../components/forms/wizard/Step2Location';
@@ -17,6 +14,9 @@ import Step6Images from '../../components/forms/wizard/Step6Images';
 import Step7ContactPreference from '../../components/forms/wizard/Step7ContactPreference';
 import Step8PreviewSubmit from '../../components/forms/wizard/Step8PreviewSubmit';
 import { settingsService } from '../../services/settingsService';
+import CompletionBadge from '../../components/dashboard/CompletionBadge';
+import { computePropertyScore } from '../../utils/propertyScore';
+import { getWizardStepStatuses } from '../../utils/wizardValidation';
 
 const POST_SUBMIT_PATH = {
   buyer: '/buyer/my-properties',
@@ -35,7 +35,6 @@ export default function AddProperty() {
   const { formData, updateData, saveDraft, submitForApproval, loaded } = useDraftProperty(user?.id, id);
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [rule, setRule] = useState(null);
 
   useEffect(() => {
     if (!loaded) return;
@@ -44,11 +43,6 @@ export default function AddProperty() {
       updateData({ categorySlug, ruleKey, images: [], extraSpaces: [] });
     }
   }, [loaded, location.state]);
-
-  useEffect(() => {
-    if (!formData.ruleKey) return;
-    mediaRuleService.getRules().then((rules) => setRule(rules[formData.ruleKey] || null));
-  }, [formData.ruleKey]);
 
   const steps = [
     t('wizard.step1Title'),
@@ -63,6 +57,7 @@ export default function AddProperty() {
 
   const [fieldConfig, setFieldConfig] = useState({});
   const [propertyFields, setPropertyFields] = useState([]);
+  const [amenitiesByCategory, setAmenitiesByCategory] = useState({});
 
   useEffect(() => {
     settingsService.getPublicSettings()
@@ -73,50 +68,29 @@ export default function AddProperty() {
         if (res && res.propertyFields) {
           setPropertyFields(res.propertyFields);
         }
+        if (res && res.amenitiesByCategory) {
+          setAmenitiesByCategory(res.amenitiesByCategory);
+        }
       })
       .catch((err) => console.error('Failed to load fields configurations:', err));
   }, []);
 
-  const mediaReady = useMemo(() => {
-    if (!formData.ruleKey || !rule) return false;
-    const building = isBuildingType(formData.ruleKey);
-    const structureCounts = building
-      ? {
-          bedrooms: formData.structure.bedrooms,
-          bathrooms: formData.structure.bathrooms,
-          halls: formData.structure.halls,
-          balconies: formData.structure.balconies,
-          kitchens: formData.structure.kitchens,
-        }
-      : {};
-    const slots = generateImageSlots(rule, structureCounts, formData.extraSpaces);
-    const requiredSlots = slots.filter((s) => s.required);
-    const hasAllRequired = requiredSlots.every((s) => formData.images.some((img) => img.slotId === s.id));
-    const captionsOk = slots
-      .filter((s) => s.captionRequired)
-      .every((s) => {
-        const img = formData.images.find((i) => i.slotId === s.id);
-        return !img || Boolean(img.caption);
-      });
-    const hasPrimary = formData.images.some((img) => img.isPrimary);
-    return hasAllRequired && hasPrimary && captionsOk;
-  }, [formData, rule]);
+  const liveScore = useMemo(() => {
+    const dynamic = {};
+    for (const sp of formData.structure?.extraSpaces || []) {
+      if (sp?.name && (sp?.value || sp?.measurement)) dynamic[sp.name] = sp;
+    }
+    return computePropertyScore({ ...formData, dynamicFields: dynamic });
+  }, [formData]);
 
-  const documentsReady = Boolean(formData.documents?.identityProof && formData.documents?.ownershipProof);
-
-  const canSubmit = mediaReady && documentsReady;
+  const stepComplete = useMemo(
+    () => getWizardStepStatuses(formData, fieldConfig),
+    [formData, fieldConfig]
+  );
 
   if (!loaded) return null;
 
   function handleNext() {
-    if (step === 6 && !mediaReady) {
-      toast.error(t('media.error.requiredSlotsIncomplete'));
-      return;
-    }
-    if (step === 6 && !documentsReady) {
-      toast.error(t('media.error.documentsRequired'));
-      return;
-    }
     setStep((s) => Math.min(8, s + 1));
   }
 
@@ -137,16 +111,6 @@ export default function AddProperty() {
   }
 
   async function handleSubmit() {
-    if (!mediaReady) {
-      toast.error(t('media.error.requiredSlotsIncomplete'));
-      setStep(6);
-      return;
-    }
-    if (!documentsReady) {
-      toast.error(t('media.error.documentsRequired'));
-      setStep(6);
-      return;
-    }
     setSaving(true);
     try {
       await submitForApproval();
@@ -161,16 +125,19 @@ export default function AddProperty() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 text-xl font-bold text-brand-800">{steps[step - 1]}</h1>
-      <WizardStepper steps={steps} current={step} />
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-brand-800">{steps[step - 1]}</h1>
+        <CompletionBadge score={liveScore.overall} label={t('scorecard.live', { ns: 'common', defaultValue: 'Completed' })} size="lg" />
+      </div>
+      <WizardStepper steps={steps} current={step} completed={stepComplete} />
 
-      {step === 1 && <Step1BasicDetails data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
-      {step === 2 && <Step2Location data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
-      {step === 3 && <Step3PriceSize data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
+      {step === 1 && <Step1BasicDetails data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
+      {step === 2 && <Step2Location data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
+      {step === 3 && <Step3PriceSize data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
       {step === 4 && <Step4Structure data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
-      {step === 5 && <Step5Amenities data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
-      {step === 6 && <Step6Images data={formData} onChange={updateData} />}
-      {step === 7 && <Step7ContactPreference data={formData} onChange={updateData} fieldConfig={fieldConfig} />}
+      {step === 5 && <Step5Amenities data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} amenitiesByCategory={amenitiesByCategory} />}
+      {step === 6 && <Step6Images data={formData} onChange={updateData} propertyFields={propertyFields} />}
+      {step === 7 && <Step7ContactPreference data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
       {step === 8 && <Step8PreviewSubmit data={formData} />}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-6">
@@ -204,7 +171,7 @@ export default function AddProperty() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={saving || !canSubmit}
+              disabled={saving}
               className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-warm-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {t('buttons.submitForApproval', { ns: 'common' })}

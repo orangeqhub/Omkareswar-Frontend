@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import FilterPanel from './FilterPanel';
 
-export default function MobileFilterDrawer({ open, onClose, filters, onChange, onReset, hideCategory, selectedCategorySlug }) {
+export default function MobileFilterDrawer({ open, onClose, filters, onChange, onReset, hideCategory, selectedCategorySlug, filterConfig }) {
   const { t } = useTranslation('properties');
   if (!open) return null;
 
@@ -17,7 +17,7 @@ export default function MobileFilterDrawer({ open, onClose, filters, onChange, o
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <FilterPanel filters={filters} onChange={onChange} onReset={onReset} hideCategory={hideCategory} selectedCategorySlug={selectedCategorySlug} />
+          <FilterPanel filters={filters} onChange={onChange} onReset={onReset} hideCategory={hideCategory} selectedCategorySlug={selectedCategorySlug} filterConfig={filterConfig} />
         </div>
         <div className="border-t border-gray-100 p-4">
           <button

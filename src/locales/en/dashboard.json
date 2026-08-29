@@ -358,6 +358,7 @@
     "missingSlots": "Missing required image slots",
     "duplicateImages": "Duplicate image warning",
     "moderationHistory": "Moderation History",
+    "categoryDetails": "Category Details",
     "sellerDetails": "Seller / Mediator Details",
     "noRecordsFound": "No properties match your filters.",
     "error": {

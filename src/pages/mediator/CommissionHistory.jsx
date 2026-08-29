@@ -51,7 +51,7 @@ export default function CommissionHistory() {
                   <td className="px-4 py-2.5">₹{Number(p.price || 0).toLocaleString('en-IN')}</td>
                   <td className="px-4 py-2.5">{COMMISSION_RATE}%</td>
                   <td className="px-4 py-2.5 font-semibold text-brand-700">₹{p.commission.toLocaleString('en-IN')}</td>
-                  <td className="px-4 py-2.5">{new Date(p.updatedDate || p.postedDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">{new Date(p.updatedDate || p.postedDate).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

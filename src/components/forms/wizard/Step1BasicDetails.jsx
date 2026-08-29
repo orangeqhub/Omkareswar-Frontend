@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { CATEGORIES } from '../../../config/categories';
 import { useLanguageStore } from '../../../store/languageStore';
+import StepExtraFields from './StepExtraFields';
 
 function isEnabled(id, fc) { return fc[id] ? fc[id].enabled !== false : true; }
 function fl(id, def, fc) { return fc[id]?.label || def; }
 
-export default function Step1BasicDetails({ data, onChange, fieldConfig = {} }) {
+export default function Step1BasicDetails({ data, onChange, fieldConfig = {}, propertyFields = [] }) {
   const { t } = useTranslation('forms');
   const language = useLanguageStore((s) => s.language);
   const selectedCategory = CATEGORIES.find((c) => c.slug === data.categorySlug);
@@ -63,6 +64,8 @@ export default function Step1BasicDetails({ data, onChange, fieldConfig = {} }) 
           />
         </div>
       )}
+
+      <StepExtraFields step={1} data={data} onChange={onChange} propertyFields={propertyFields} />
     </div>
   );
 }

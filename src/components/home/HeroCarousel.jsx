@@ -110,7 +110,11 @@ export default function HeroCarousel() {
     settingsService.getPublicSettings()
       .then((res) => {
         if (res && res.customLocations) {
-          setCustomLocs(res.customLocations);
+          const cl = res.customLocations;
+          const locs = Array.isArray(cl)
+            ? cl
+            : [...(cl.cities || []), ...(cl.states || [])];
+          setCustomLocs(locs);
         }
       })
       .catch((err) => {

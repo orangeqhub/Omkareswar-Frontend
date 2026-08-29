@@ -4,7 +4,7 @@ import { Phone, MessageCircle, Heart, MapPin, BadgeCheck, Star, Ruler, Scale, Ho
 import { useLanguageStore } from '../../store/languageStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCompareStore } from '../../store/compareStore';
-import { getLocalizedField } from '../../utils/localize';
+import { getLocalizedField, getPublicAddress } from '../../utils/localize';
 import { buildTelLink, buildWhatsAppLink } from '../../utils/contactLinks';
 import { toast } from '../../store/toastStore';
 import { resolveMediaUrl } from '../../store/url';
@@ -25,7 +25,7 @@ export default function PropertyCard({ property }) {
   const toggleCompare = useCompareStore((s) => s.toggle);
 
   const title = getLocalizedField(property, 'title', language);
-  const location = getLocalizedField(property, 'location', language);
+  const location = getPublicAddress(property);
   const primaryImage = property.images?.find((img) => img.isPrimary) || property.images?.[0];
 
   function handleWishlist(e) {

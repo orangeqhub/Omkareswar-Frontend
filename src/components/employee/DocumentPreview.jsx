@@ -40,7 +40,7 @@ export default function DocumentPreview({ title, fileName, uploadDate, previewUr
       </div>
 
       <p className="mt-2 truncate text-xs text-gray-500">{fileName || t('document.noFile')}</p>
-      {uploadDate && <p className="text-xs text-gray-400">{t('document.uploadedOn', { date: new Date(uploadDate).toLocaleDateString() })}</p>}
+      {uploadDate && <p className="text-xs text-gray-400">{t('document.uploadedOn', { date: new Date(uploadDate).toLocaleString() })}</p>}
 
       {onStatusChange && (
         <div className="mt-2 flex flex-wrap gap-1.5">

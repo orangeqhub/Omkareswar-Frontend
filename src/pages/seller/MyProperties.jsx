@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { getLocalizedField } from '../../utils/localize';
 import StatusBadge from '../../components/dashboard/StatusBadge';
+import CompletionBadge from '../../components/dashboard/CompletionBadge';
 import EmptyState from '../../components/common/EmptyState';
 import { toast } from '../../store/toastStore';
 
@@ -40,6 +41,8 @@ export default function MyProperties({ basePath = '/seller/properties' }) {
             <th className="px-4 py-3">Title</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Price</th>
+            <th className="px-4 py-3">Uploaded</th>
+            <th className="px-4 py-3">Completion</th>
             <th className="px-4 py-3">Views</th>
             <th className="px-4 py-3">Actions</th>
           </tr>
@@ -50,6 +53,12 @@ export default function MyProperties({ basePath = '/seller/properties' }) {
               <td className="px-4 py-3 font-medium text-gray-800">{getLocalizedField(p, 'title', language)}</td>
               <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
               <td className="px-4 py-3">₹{Number(p.price || 0).toLocaleString('en-IN')}</td>
+              <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
+                {p.postedDate || p.createdAt ? new Date(p.postedDate || p.createdAt).toLocaleString() : '-'}
+              </td>
+              <td className="px-4 py-3">
+                <CompletionBadge score={p.completionScore} />
+              </td>
               <td className="px-4 py-3">{p.views || 0}</td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">

@@ -6,11 +6,13 @@
   },
   "documents": {
     "title": "పత్రాలు",
+    "site": "సైట్ పత్రం",
+    "link": "లింక్ పత్రం",
     "identityProof": "గుర్తింపు రుజువు",
-    "ownershipProof": "యాజమాన్య పత్రాలు",
     "uploadPrompt": "అప్‌లోడ్ చేయడానికి క్లిక్ చేయండి",
     "replace": "మార్చు",
     "uploadedFile": "అప్‌లోడ్ చేయబడింది: {{name}}",
+    "uploadedAt": "అప్‌లోడ్ చేయబడింది: {{date}}",
     "acceptedFormats": "PDF, JPG, JPEG లేదా PNG"
   },
   "registration": {
@@ -134,6 +136,7 @@
     "setPrimary": "ప్రధానంగా సెట్ చేయండి",
     "caption": "శీర్షిక",
     "captionPlaceholder": "చిన్న శీర్షిక జోడించండి (ఐచ్ఛికం)",
+    "uploadedAt": "అప్‌లోడ్ చేయబడింది: {{date}}",
     "remove": "తొలగించు",
     "replace": "మార్చు",
     "required": "తప్పనిసరి",
@@ -157,7 +160,6 @@
       "layoutPlan": "లేఅవుట్ ప్లాన్",
       "locationMap": "స్థాన పటం",
       "nearbyLandmark": "సమీప ల్యాండ్‌మార్క్",
-      "approvalDocument": "ఆమోద పత్రం",
       "waterSource": "నీటి వనరు",
       "electricityAccess": "విద్యుత్ యాక్సెస్"
     },

@@ -10,3 +10,14 @@ export function getLocalizedField(obj, field, lang) {
   }
   return obj[`${field}En`] ?? '';
 }
+
+/**
+ * Public-safe property address. Only Mandal and District are exposed to the
+ * public; internal users (admin / assigned employee) use getLocalizedField for the
+ * full address instead.
+ */
+export function getPublicAddress(property) {
+  if (!property) return '';
+  const parts = [property.mandal, property.district].filter(Boolean);
+  return [...new Set(parts)].join(', ');
+}

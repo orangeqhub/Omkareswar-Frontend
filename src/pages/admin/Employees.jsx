@@ -5,6 +5,7 @@ import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import EmptyState from '../../components/common/EmptyState';
+import CompletionBadge from '../../components/dashboard/CompletionBadge';
 import { exportSingleSheetXlsx } from '../../utils/xlsxExport';
 import apiClient from '../../services/apiClient';
 import { registrationFormService } from '../../services/registrationFormService';
@@ -749,7 +750,10 @@ export default function Employees() {
                                   <p className="font-semibold text-gray-800">{p.titleEn || 'Untitled Property'}</p>
                                   <p className="text-gray-500">{p.propertyCode} &middot; {p.city}</p>
                                 </div>
-                                <span className="rounded bg-brand-50 px-2 py-0.5 font-semibold text-brand-700 uppercase">{p.status}</span>
+                                <span className="flex items-center gap-2">
+                                  <CompletionBadge score={p.completionScore} />
+                                  <span className="rounded bg-brand-50 px-2 py-0.5 font-semibold text-brand-700 uppercase">{p.status}</span>
+                                </span>
                               </div>
                             ))}
                           </div>

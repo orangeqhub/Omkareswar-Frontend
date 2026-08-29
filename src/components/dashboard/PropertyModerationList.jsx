@@ -1,28 +1,38 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp, UserRound, ShieldCheck } from 'lucide-react';
 import { propertyService } from '../../services/propertyService';
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../store/toastStore';
 import EmptyState from '../common/EmptyState';
 import StatusBadge from './StatusBadge';
+import CompletionBadge from './CompletionBadge';
+import CompletionScoreCard from './CompletionScoreCard';
 
-export default function PropertyModerationList({ statusFilter = 'pending', scoped = false }) {
+export default function PropertyModerationList({ statusFilter = 'pending', scoped = false, categorySlug, location }) {
   const { t } = useTranslation(['common', 'dashboard', 'properties']);
   const { user } = useAuthStore();
   const [properties, setProperties] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [noteFor, setNoteFor] = useState(null);
   const [note, setNote] = useState('');
+  const [expanded, setExpanded] = useState({});
 
   function load() {
     const params = { status: statusFilter, includeAllStatuses: true, pageSize: 100 };
+    if (categorySlug) params.categorySlug = categorySlug;
+    if (location && location.trim()) params.city = location.trim();
     if (scoped) {
       params.viewer = user;
       params.scopeMode = 'employee';
     }
-    propertyService.getProperties(params).then((r) => setProperties(r.items));
+    if (user?.role === 'admin') {
+      propertyService.getAdminProperties(params).then(setProperties);
+    } else {
+      propertyService.getProperties(params).then((r) => setProperties(r.items));
+    }
     if (user?.role === 'admin') {
       userService.getUsers({ role: 'employee' }).then((list) => {
         setEmployees(list.filter((e) => e.status !== 'rejected' && e.status !== 'inactive'));
@@ -30,7 +40,7 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
     }
   }
 
-  useEffect(load, [statusFilter, scoped, user]);
+  useEffect(load, [statusFilter, scoped, user, categorySlug, location]);
 
   async function handleAction(id, action, actionNote) {
     await propertyService.moderate(id, action, actionNote);
@@ -87,19 +97,44 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
       {properties.map((p) => {
         const assignedEmployee = employees.find((e) => e.id === p.assignedEmployeeId);
         return (
-          <div key={p.id} className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div key={p.id} className="rounded-xl border border-gray-200 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Link to={`/properties/${p.id}`} className="font-medium text-brand-800 hover:underline">{p.titleEn}</Link>
               <p className="text-xs font-semibold text-brand-700">{p.propertyCode}</p>
               <p className="text-sm text-gray-500">{p.locationEn} &middot; ₹{Number(p.price || 0).toLocaleString('en-IN')} &middot; {t('detail.views', { count: p.views || 0, ns: 'properties' })}</p>
-              <div className="mt-1"><StatusBadge status={p.status} /></div>
-              <p className="mt-1 text-xs font-medium text-brand-700">
-                {p.assignedEmployeeId
-                  ? t('assignment.assignedTo', { ns: 'dashboard', name: assignedEmployee?.name || p.assignedEmployeeId })
-                  : t('assignment.unassigned', { ns: 'dashboard' })}
-              </p>
+              <p className="text-xs text-gray-400">Uploaded: {p.postedDate || p.createdAt ? new Date(p.postedDate || p.createdAt).toLocaleString() : '-'}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <StatusBadge status={p.status} />
+                <CompletionBadge score={p.completionScore} />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                <span className="inline-flex items-center gap-1 font-medium text-gray-700">
+                  <UserRound size={13} className="text-brand-600" />
+                  {p.seller?.name || p.contactName || '—'}
+                  {p.seller?.mobile ? ` · ${p.seller.mobile}` : p.contactPhone ? ` · ${p.contactPhone}` : ''}
+                  {p.seller?.role ? (
+                    <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-gray-500">
+                      <ShieldCheck size={10} /> {p.seller.role}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="inline-flex items-center gap-1 font-medium text-brand-700">
+                  {p.assignedEmployeeId
+                    ? t('assignment.assignedTo', { ns: 'dashboard', name: assignedEmployee?.name || p.assignedEmployeeId })
+                    : t('assignment.unassigned', { ns: 'dashboard' })}
+                </span>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setExpanded((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+                className="flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {expanded[p.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {expanded[p.id] ? t('scorecard.hide', { ns: 'common', defaultValue: 'Hide Scorecard' }) : t('scorecard.view', { ns: 'common', defaultValue: 'View Scorecard' })}
+              </button>
               {user?.role === 'admin' && (
                 <>
                   <select
@@ -179,6 +214,17 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
               )}
             </div>
           </div>
+
+          {expanded[p.id] && (
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <CompletionScoreCard
+                score={p.completionScore}
+                sections={p.completionSections}
+                title={`${t('scorecard.title', { ns: 'common', defaultValue: 'Property Completion Score' })} – ${p.titleEn || p.propertyCode}`}
+              />
+            </div>
+          )}
+        </div>
         );
       })}
 

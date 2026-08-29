@@ -168,6 +168,12 @@ async function getBySeller(sellerId) {
   return Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
 }
 
+async function getAdminProperties(filters = {}) {
+  const response = await apiClient.get('/admin/properties', { params: filters });
+  const data = unwrap(response);
+  return Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+}
+
 async function moderate(id, action, note) {
   const response = await apiClient.post(`/admin/properties/${id}/moderate`, {
     action,
@@ -246,6 +252,7 @@ export const propertyService = {
   updateDraft,
   submitForApproval,
   getBySeller,
+  getAdminProperties,
   moderate,
   deleteProperty,
   toggleFeatured,

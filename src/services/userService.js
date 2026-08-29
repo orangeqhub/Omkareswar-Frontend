@@ -75,6 +75,11 @@ async function deleteUser(id) {
   return unwrap(response);
 }
 
+async function trackNumber(number) {
+  const response = await apiClient.get(`/admin/users/number/${encodeURIComponent(number)}`);
+  return unwrap(response);
+}
+
 async function assignEmployee(userId, employeeId, reason) {
   const response = await apiClient.patch(`/admin/users/${userId}/assign-employee`, {
     employeeId,
@@ -96,4 +101,5 @@ export const userService = {
   assignEmployee,
   createUser,
   deleteUser,
+  trackNumber,
 };

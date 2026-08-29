@@ -5,12 +5,19 @@ import { X, BadgeCheck, Star, AlertTriangle, Home } from 'lucide-react';
 import { propertyService } from '../../services/propertyService';
 import { useCompareStore, COMPARE_LIMITS } from '../../store/compareStore';
 import { useLanguageStore } from '../../store/languageStore';
-import { getLocalizedField } from '../../utils/localize';
+import { getLocalizedField, getPublicAddress } from '../../utils/localize';
+import { isBuildingType } from '../../utils/wizardDefaults';
 import EmptyState from '../../components/common/EmptyState';
 import { resolveMediaUrl } from '../../store/url';
 
 function naOr(value, na) {
   return value === undefined || value === null || value === '' ? na : value;
+}
+
+function hasStructure(p) {
+  if (!isBuildingType(p.ruleKey)) return false;
+  const s = p.structure || {};
+  return [s.bedrooms, s.bathrooms, s.halls, s.balconies].some((n) => typeof n === 'number' && n > 0);
 }
 
 export default function Compare() {
@@ -38,12 +45,12 @@ export default function Compare() {
   const rows = [
     { label: t('table.price'), value: (p) => `₹${Number(p.price || 0).toLocaleString('en-IN')}` },
     { label: t('table.category'), value: (p) => p.categorySlug },
-    { label: t('table.location'), value: (p) => naOr(getLocalizedField(p, 'location', language), na) },
+    { label: t('table.location'), value: (p) => naOr(getPublicAddress(p), na) },
     { label: t('wizard.area', { ns: 'forms' }), value: (p) => `${naOr(p.area, na)} ${p.areaUnit || ''}` },
-    { label: t('wizard.bedrooms', { ns: 'forms' }), value: (p) => naOr(p.structure?.bedrooms, na) },
-    { label: t('wizard.bathrooms', { ns: 'forms' }), value: (p) => naOr(p.structure?.bathrooms, na) },
-    { label: t('wizard.facing', { ns: 'forms' }), value: (p) => naOr(p.structure?.facing || p.plotDetails?.facing, na) },
-    { label: t('wizard.furnishing', { ns: 'forms' }), value: (p) => naOr(p.structure?.furnishing, na) },
+    { label: t('wizard.bedrooms', { ns: 'forms' }), value: (p) => (hasStructure(p) ? naOr(p.structure?.bedrooms, na) : na) },
+    { label: t('wizard.bathrooms', { ns: 'forms' }), value: (p) => (hasStructure(p) ? naOr(p.structure?.bathrooms, na) : na) },
+    { label: t('wizard.facing', { ns: 'forms' }), value: (p) => (hasStructure(p) ? naOr(p.structure?.facing, na) : naOr(p.plotDetails?.facing, na)) },
+    { label: t('wizard.furnishing', { ns: 'forms' }), value: (p) => (hasStructure(p) ? naOr(p.structure?.furnishing, na) : na) },
     { label: t('table.views'), value: (p) => naOr(p.views, na) },
   ];
 

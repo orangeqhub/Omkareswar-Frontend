@@ -31,6 +31,18 @@ export const DEFAULT_CATEGORY_ASSETS = {
     icon: 'Building2',
     image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=60',
   },
+  'industrial-lands': {
+    icon: 'Factory',
+    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=60',
+  },
+  'warehouse-godowns': {
+    icon: 'Warehouse',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=60',
+  },
+  'farm-houses': {
+    icon: 'Trees',
+    image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=60',
+  },
 };
 
 export function mergeCategoryDefaults(list) {

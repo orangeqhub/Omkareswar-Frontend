@@ -86,7 +86,6 @@ const landStructureRules = {
     slot('layoutPlan', 'media.slot.layoutPlan', false, 4, { captionRequired: true, primaryEligible: false }),
     slot('locationMap', 'media.slot.locationMap', false, 5, { primaryEligible: false }),
     slot('nearbyLandmark', 'media.slot.nearbyLandmark', false, 6),
-    slot('approvalDocument', 'media.slot.approvalDocument', false, 7, { primaryEligible: false }),
   ],
   countBasedSlots: {},
   allowedExtraSpaces: [

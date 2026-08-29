@@ -61,6 +61,7 @@ export const DASHBOARD_NAV = {
     { key: 'reports', path: '/admin/reports', labelKey: 'nav.reports', icon: 'BarChart3' },
     { key: 'notifications', path: '/admin/notifications', labelKey: 'nav.notifications', icon: 'Bell' },
     { key: 'audit-logs', path: '/admin/audit-logs', labelKey: 'nav.auditLogs', icon: 'History' },
+    { key: 'locations', path: '/admin/locations', labelKey: 'nav.locations', icon: 'MapPin' },
     { key: 'property-fields', path: '/admin/property-fields', labelKey: 'nav.propertyFields', icon: 'Sliders' },
     { key: 'registration-forms', path: '/admin/registration-forms', labelKey: 'nav.registrationForms', icon: 'ClipboardList' },
     { key: 'settings', path: '/admin/settings', labelKey: 'nav.settings', icon: 'Settings' },

@@ -94,6 +94,7 @@ const AdminReports = lazy(() => import('../pages/admin/Reports'));
 const AdminNotifications = lazy(() => import('../pages/admin/Notifications'));
 const AdminAuditLogs = lazy(() => import('../pages/admin/AuditLogs'));
 const AdminSettings = lazy(() => import('../pages/admin/Settings'));
+const AdminLocations = lazy(() => import('../pages/admin/Locations'));
 const AdminPropertyFields = lazy(() => import('../pages/admin/PropertyFields'));
 const AdminRegistrationForms = lazy(() => import('../pages/admin/RegistrationForms'));
 const AdminEditProperty = lazy(() => import('../pages/seller/EditProperty'));
@@ -259,6 +260,7 @@ export default function AppRoutes() {
           <Route path="notifications" element={<AdminNotifications />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="locations" element={<AdminLocations />} />
           <Route path="property-fields" element={<AdminPropertyFields />} />
           <Route path="registration-forms" element={<AdminRegistrationForms />} />
         </Route>
