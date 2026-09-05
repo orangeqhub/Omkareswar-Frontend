@@ -7,7 +7,6 @@ import { toast } from '../../store/toastStore';
 import WizardStepper from '../../components/forms/wizard/WizardStepper';
 import Step1BasicDetails from '../../components/forms/wizard/Step1BasicDetails';
 import Step2Location from '../../components/forms/wizard/Step2Location';
-import Step3PriceSize from '../../components/forms/wizard/Step3PriceSize';
 import Step4Structure from '../../components/forms/wizard/Step4Structure';
 import Step5Amenities from '../../components/forms/wizard/Step5Amenities';
 import Step6Images from '../../components/forms/wizard/Step6Images';
@@ -17,6 +16,8 @@ import { settingsService } from '../../services/settingsService';
 import CompletionBadge from '../../components/dashboard/CompletionBadge';
 import { computePropertyScore } from '../../utils/propertyScore';
 import { getWizardStepStatuses } from '../../utils/wizardValidation';
+import { CATEGORIES } from '../../config/categories';
+import { useLanguageStore } from '../../store/languageStore';
 
 const POST_SUBMIT_PATH = {
   buyer: '/buyer/my-properties',
@@ -32,6 +33,7 @@ export default function AddProperty() {
   const location = useLocation();
   const { t } = useTranslation('forms');
   const { user } = useAuthStore();
+  const language = useLanguageStore((s) => s.language);
   const { formData, updateData, saveDraft, submitForApproval, loaded } = useDraftProperty(user?.id, id);
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -47,7 +49,6 @@ export default function AddProperty() {
   const steps = [
     t('wizard.step1Title'),
     t('wizard.step2Title'),
-    t('wizard.step3Title'),
     t('wizard.step4Title'),
     t('wizard.step5Title'),
     t('wizard.step6Title'),
@@ -88,10 +89,12 @@ export default function AddProperty() {
     [formData, fieldConfig]
   );
 
+  const selectedCategory = CATEGORIES.find((c) => c.slug === formData.categorySlug);
+
   if (!loaded) return null;
 
   function handleNext() {
-    setStep((s) => Math.min(8, s + 1));
+    setStep((s) => Math.min(7, s + 1));
   }
 
   function handleBack() {
@@ -129,16 +132,30 @@ export default function AddProperty() {
         <h1 className="text-xl font-bold text-brand-800">{steps[step - 1]}</h1>
         <CompletionBadge score={liveScore.overall} label={t('scorecard.live', { ns: 'common', defaultValue: 'Completed' })} size="lg" />
       </div>
+
+      {selectedCategory && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border-2 border-brand-500 bg-brand-50 p-4">
+          <span className="text-2xl font-black text-brand-700">
+            {language === 'te' ? selectedCategory.nameTe : selectedCategory.nameEn}
+          </span>
+          <span className="flex h-6 items-center rounded-full bg-brand-600 px-3 text-xs font-bold text-warm-white">
+            {t('wizard.category')}
+          </span>
+          <p className="ml-auto text-xs font-medium text-brand-700">
+            You are adding details for this category
+          </p>
+        </div>
+      )}
+
       <WizardStepper steps={steps} current={step} completed={stepComplete} />
 
       {step === 1 && <Step1BasicDetails data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
       {step === 2 && <Step2Location data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
-      {step === 3 && <Step3PriceSize data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
-      {step === 4 && <Step4Structure data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
-      {step === 5 && <Step5Amenities data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} amenitiesByCategory={amenitiesByCategory} />}
-      {step === 6 && <Step6Images data={formData} onChange={updateData} propertyFields={propertyFields} />}
-      {step === 7 && <Step7ContactPreference data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
-      {step === 8 && <Step8PreviewSubmit data={formData} />}
+      {step === 3 && <Step4Structure data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
+      {step === 4 && <Step5Amenities data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} amenitiesByCategory={amenitiesByCategory} />}
+      {step === 5 && <Step6Images data={formData} onChange={updateData} propertyFields={propertyFields} />}
+      {step === 6 && <Step7ContactPreference data={formData} onChange={updateData} fieldConfig={fieldConfig} propertyFields={propertyFields} />}
+      {step === 7 && <Step8PreviewSubmit data={formData} />}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-6">
         <button
@@ -159,7 +176,7 @@ export default function AddProperty() {
           >
             {t('buttons.saveDraft', { ns: 'common' })}
           </button>
-          {step < 8 ? (
+          {step < 7 ? (
             <button
               type="button"
               onClick={handleNext}

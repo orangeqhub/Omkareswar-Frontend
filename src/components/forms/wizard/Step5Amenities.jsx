@@ -3,9 +3,13 @@ import StepExtraFields from './StepExtraFields';
 import { getAmenitiesForCategory } from '../../../config/categoryConfig';
 import { CATEGORIES } from '../../../config/categories';
 import AmenityIcon from '../../common/AmenityIcon';
+import { useLanguageStore } from '../../../store/languageStore';
+import { getTe } from '../../../config/teluguDict';
 
 export default function Step5Amenities({ data, onChange, fieldConfig = {}, propertyFields = [], amenitiesByCategory = {} }) {
   const { t } = useTranslation('forms');
+  const language = useLanguageStore((s) => s.language);
+  const g = (text) => getTe(text, language);
   const selectedCategory = CATEGORIES.find((c) => c.slug === data.categorySlug);
 
   const amenitiesEnabled = fieldConfig.amenities ? fieldConfig.amenities.enabled !== false : true;
@@ -26,7 +30,7 @@ export default function Step5Amenities({ data, onChange, fieldConfig = {}, prope
             <span className="text-sm font-medium text-gray-700">{t('wizard.amenities')}</span>
             {data.categorySlug && (
               <span className="text-[11px] font-medium text-brand-600 bg-brand-50 rounded px-2 py-0.5">
-                Shown for: {selectedCategory?.nameEn || data.categorySlug}
+                {t('wizard.shownFor', { defaultValue: 'Shown for:' })} {language === 'te' ? (selectedCategory?.nameTe || data.categorySlug) : (selectedCategory?.nameEn || data.categorySlug)}
               </span>
             )}
           </div>
@@ -40,7 +44,7 @@ export default function Step5Amenities({ data, onChange, fieldConfig = {}, prope
                   className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600"
                 />
                 <AmenityIcon amenity={a} size={16} className="shrink-0 text-brand-600" />
-                <span className="min-w-0 truncate">{a}</span>
+                <span className="min-w-0 truncate">{g(a)}</span>
               </label>
             ))}
             {selectedExtras.map((a) => (
@@ -52,13 +56,13 @@ export default function Step5Amenities({ data, onChange, fieldConfig = {}, prope
                   className="h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600"
                 />
                 <AmenityIcon amenity={a} size={16} className="shrink-0 text-amber-600" />
-                <span className="min-w-0 truncate">{a}</span>
+                <span className="min-w-0 truncate">{g(a)}</span>
               </label>
             ))}
           </div>
         </div>
       ) : (
-        <p className="text-sm text-gray-400 italic py-4">Amenities section is disabled.</p>
+        <p className="text-sm text-gray-400 italic py-4">{g('Amenities section is disabled.')}</p>
       )}
 
       <StepExtraFields step={5} data={data} onChange={onChange} propertyFields={propertyFields} />

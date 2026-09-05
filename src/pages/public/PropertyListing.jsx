@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, ChevronRight } from 'lucide-react';
 import { getCategoryBySlug } from '../../config/categories';
+import { getStateForCity } from '../../data/locations';
 import { useLanguageStore } from '../../store/languageStore';
 import { propertyService } from '../../services/propertyService';
 import { useLocationStore } from '../../store/locationStore';
@@ -30,17 +31,27 @@ export default function PropertyListing({ forcedCategorySlug }) {
 
   const [filters, setFilters] = useState(() => {
     const slug = searchParams.get('categorySlug') || undefined;
-    const isRes = slug ? isResidentialCategory(slug) : false;
+    const slugList = searchParams.get('categorySlugs');
+    const allSlugs = [
+      ...(slugList ? slugList.split(',').map(s => s.trim()).filter(Boolean) : []),
+      ...(slug ? [slug] : []),
+    ];
+    const isRes = allSlugs.length ? allSlugs.some(s => isResidentialCategory(s)) : false;
+
+    const urlCity = searchParams.get('city');
+    const effectiveCity = urlCity || (categorySlug ? undefined : (selectedLocation || undefined));
+    const derivedState = getStateForCity(effectiveCity) || undefined;
 
     return {
-      state: searchParams.get('state') || undefined,
+      state: searchParams.get('state') || derivedState,
       district: searchParams.get('district') || undefined,
-      city: searchParams.get('city') || (categorySlug ? undefined : selectedLocation || undefined),
+      city: urlCity || (categorySlug ? undefined : selectedLocation || undefined),
       transactionType: searchParams.get('transactionType') || undefined,
       minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
       search: searchParams.get('search') || undefined,
       categorySlug: slug,
+      categorySlugs: slugList ? slugList.split(',').map(s => s.trim()).filter(Boolean) : undefined,
       bedrooms: isRes && searchParams.get('bedrooms') ? Number(searchParams.get('bedrooms')) : undefined,
       bathrooms: isRes && searchParams.get('bathrooms') ? Number(searchParams.get('bathrooms')) : undefined,
       furnishing: isRes && searchParams.get('furnishing') || undefined,
@@ -54,17 +65,47 @@ export default function PropertyListing({ forcedCategorySlug }) {
   const [loading, setLoading] = useState(true);
   const [filterConfig, setFilterConfig] = useState(null);
 
+  // Keep the location filter in sync with the navbar location picker: when the
+  // store's selectedLocation changes (e.g. user picks "Guntur" in the navbar),
+  // auto-fill the city + its parent state in the filter panel. An explicit
+  // `city` in the URL wins and is not overridden for the page session.
+  const pageUrlCity = useRef(searchParams.get('city'));
+
+  useEffect(() => {
+    if (categorySlug || !selectedLocation) return;
+    if (pageUrlCity.current) return;
+    setFilters((prev) => {
+      if (prev.city === selectedLocation) return prev;
+      const stateForCity = getStateForCity(selectedLocation);
+      return { ...prev, city: selectedLocation, state: stateForCity || prev.state };
+    });
+  }, [selectedLocation, categorySlug]);
+
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     let changed = false;
 
-    const baseKeys = ['state', 'district', 'city', 'transactionType', 'minPrice', 'maxPrice', 'search', 'bedrooms', 'bathrooms', 'furnishing', 'categorySlug'];
+    const baseKeys = ['state', 'district', 'city', 'transactionType', 'minPrice', 'maxPrice', 'search', 'bedrooms', 'bathrooms', 'furnishing', 'categorySlug', 'categorySlugs'];
     const customKeys = Array.isArray(filterConfig?.custom) ? filterConfig.custom.map((c) => c.id) : [];
     const allKeys = [...baseKeys, ...customKeys];
 
     allKeys.forEach((key) => {
       const valInFilters = filters[key];
       const valInParams = params.get(key);
+
+      if (Array.isArray(valInFilters)) {
+        const joined = valInFilters.join(',');
+        if (joined) {
+          if (valInParams !== joined) {
+            params.set(key, joined);
+            changed = true;
+          }
+        } else if (params.has(key)) {
+          params.delete(key);
+          changed = true;
+        }
+        return;
+      }
 
       if (valInFilters !== undefined && valInFilters !== null && valInFilters !== '') {
         if (valInParams !== String(valInFilters)) {
@@ -106,10 +147,17 @@ export default function PropertyListing({ forcedCategorySlug }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterConfig]);
 
-  const effectiveFilters = useMemo(
-    () => ({ ...filters, categorySlug: category ? category.slug : filters.categorySlug, sort, page, pageSize: PAGE_SIZE * page }),
-    [filters, category, sort, page]
-  );
+  const effectiveFilters = useMemo(() => {
+    const eff = { ...filters };
+    if (category) {
+      eff.categorySlug = category.slug;
+      eff.categorySlugs = undefined;
+    } else if (Array.isArray(filters.categorySlugs) && filters.categorySlugs.length) {
+      eff.categorySlugs = filters.categorySlugs.join(',');
+      eff.categorySlug = undefined;
+    }
+    return { ...eff, sort, page, pageSize: PAGE_SIZE * page };
+  }, [filters, category, sort, page]);
 
   useEffect(() => {
     setLoading(true);

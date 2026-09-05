@@ -11,7 +11,7 @@ import StatusBadge from './StatusBadge';
 import CompletionBadge from './CompletionBadge';
 import CompletionScoreCard from './CompletionScoreCard';
 
-export default function PropertyModerationList({ statusFilter = 'pending', scoped = false, categorySlug, location }) {
+export default function PropertyModerationList({ statusFilter = 'pending', scoped = false, categorySlug, location, propertyId }) {
   const { t } = useTranslation(['common', 'dashboard', 'properties']);
   const { user } = useAuthStore();
   const [properties, setProperties] = useState(null);
@@ -21,7 +21,12 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
   const [expanded, setExpanded] = useState({});
 
   function load() {
-    const params = { status: statusFilter, includeAllStatuses: true, pageSize: 100 };
+    const params = { includeAllStatuses: true, pageSize: 100 };
+    if (propertyId && propertyId.trim()) {
+      params.propertyId = propertyId.trim();
+    } else {
+      params.status = statusFilter;
+    }
     if (categorySlug) params.categorySlug = categorySlug;
     if (location && location.trim()) params.city = location.trim();
     if (scoped) {
@@ -40,7 +45,7 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
     }
   }
 
-  useEffect(load, [statusFilter, scoped, user, categorySlug, location]);
+  useEffect(load, [statusFilter, scoped, user, categorySlug, location, propertyId]);
 
   async function handleAction(id, action, actionNote) {
     await propertyService.moderate(id, action, actionNote);

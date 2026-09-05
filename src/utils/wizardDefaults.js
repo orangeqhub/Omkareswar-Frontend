@@ -30,8 +30,11 @@ export function createEmptyWizardData() {
     priceNegotiable: false,
     area: '',
     areaUnit: 'sqft',
+    areaManual: false,
     dimensions: '',
     pricePerUnit: '',
+    govtValue: '',
+    totalAmount: '',
 
     // Step 4 (building)
     structure: {
@@ -72,6 +75,8 @@ export function createEmptyWizardData() {
       link: null,
       identityProof: null,
     },
+    documentationNumber: '',
+    documentationYear: '',
 
     // Step 7
     contactName: '',

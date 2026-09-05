@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Locate, Loader2 } from 'lucide-react';
-import { STATES, DISTRICTS, CITIES, MANDALS } from '../../../data/locations';
+import { STATES, DISTRICTS, MANDALS } from '../../../data/locations';
 import { toast } from '../../../store/toastStore';
 import { loadGoogleMapsScript } from '../../../utils/googleMaps';
 import StepExtraFields from './StepExtraFields';
@@ -20,11 +20,6 @@ export default function Step2Location({ data, onChange, fieldConfig = {}, proper
     if (!selectedState) return [];
     return DISTRICTS[selectedState] || [];
   }, [selectedState]);
-
-  const citiesForDistrict = useMemo(() => {
-    if (!selectedDistrict) return CITIES;
-    return CITIES;
-  }, [selectedDistrict]);
 
   const mandalsForDistrict = useMemo(() => {
     if (!selectedDistrict) return [];
@@ -96,7 +91,7 @@ export default function Step2Location({ data, onChange, fieldConfig = {}, proper
     const val = e.target.value;
     setSelectedState(val);
     setSelectedDistrict('');
-    onChange({ state: val, district: '', mandal: '' });
+    onChange({ state: val, district: '', mandal: '', cityVillage: '' });
   }
 
   function handleDistrictChange(e) {
@@ -297,48 +292,20 @@ export default function Step2Location({ data, onChange, fieldConfig = {}, proper
           )
         )}
 
-        {/* ── City / Town / Village dropdown with "Other" option ── */}
+        {/* ── Village (free text) ── */}
         {en('cityVillage') && (
           <div>
             <label htmlFor="wz-city" className="mb-1.5 block text-sm font-medium text-gray-700">
               {lb('cityVillage', t('wizard.cityVillage'))}
             </label>
-            <select
+            <input
               id="wz-city"
-              value={CITIES.includes(data.cityVillage) ? data.cityVillage : '__other__'}
-              onChange={(e) => {
-                if (e.target.value === '__other__') {
-                  onChange({ cityVillage: '' });
-                } else {
-                  onChange({ cityVillage: e.target.value });
-                }
-              }}
-              className={selectCls}
-            >
-              <option value="">Select City / Town / Village</option>
-              {citiesForDistrict.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-              <option value="__other__">Other (type manually)</option>
-            </select>
-            {!CITIES.includes(data.cityVillage) && data.cityVillage !== '' && (
-              <input
-                type="text"
-                value={data.cityVillage || ''}
-                onChange={(e) => onChange({ cityVillage: e.target.value })}
-                placeholder="Type city / town / village name"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
-              />
-            )}
-            {!CITIES.includes(data.cityVillage) && data.cityVillage === '' && (
-              <input
-                type="text"
-                value=""
-                onChange={(e) => onChange({ cityVillage: e.target.value })}
-                placeholder="Type city / town / village name"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
-              />
-            )}
+              type="text"
+              value={data.cityVillage || ''}
+              onChange={(e) => onChange({ cityVillage: e.target.value })}
+              placeholder={lb('cityVillage', t('wizard.cityVillage'))}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none"
+            />
           </div>
         )}
       </div>

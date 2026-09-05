@@ -76,8 +76,8 @@ export default function Footer() {
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 sm:px-6 md:grid-cols-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-warm-white">
-              <img src={logoImage} alt={t('brand.logoAlt')} className="h-full w-full object-contain" />
+            <span className="flex h-14 w-[5.25rem] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-warm-white sm:h-16 sm:w-24">
+              <img src={logoImage} alt={t('brand.logoAlt')} className="h-full w-full scale-[1.4] object-contain" />
             </span>
             <h2 className="text-lg font-bold text-warm-white">{t('brand.name')}</h2>
           </div>

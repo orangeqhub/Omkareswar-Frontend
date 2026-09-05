@@ -162,18 +162,42 @@ export default function Step6Images({ data, onChange, propertyFields = [] }) {
       <div className="mt-8 border-t border-gray-100 pt-6">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-700">{t('documents.title')}</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <DocumentUploader
-            label={t('documents.site')}
-            document={data.documents?.site}
-            onUpload={(file) => handleUploadDocument('site', file)}
-            error={errors.site}
-          />
-          <DocumentUploader
-            label={t('documents.link')}
-            document={data.documents?.link}
-            onUpload={(file) => handleUploadDocument('link', file)}
-            error={errors.link}
-          />
+          <div className="space-y-3">
+            <DocumentUploader
+              label={t('documents.site')}
+              document={data.documents?.site}
+              onUpload={(file) => handleUploadDocument('site', file)}
+              error={errors.site}
+            />
+            <div>
+              <label htmlFor="wz-doc-no-year" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('documents.siteNoYear')}</label>
+              <input
+                id="wz-doc-no-year"
+                value={data.documentationNumber || ''}
+                onChange={(e) => onChange({ documentationNumber: e.target.value })}
+                placeholder={t('documents.siteNoYearPlaceholder')}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <DocumentUploader
+              label={t('documents.link')}
+              document={data.documents?.link}
+              onUpload={(file) => handleUploadDocument('link', file)}
+              error={errors.link}
+            />
+            <div>
+              <label htmlFor="wz-link-doc-year" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('documents.linkPreparedYear')}</label>
+              <input
+                id="wz-link-doc-year"
+                value={data.documentationYear || ''}
+                onChange={(e) => onChange({ documentationYear: e.target.value })}
+                placeholder={t('documents.linkPreparedYearPlaceholder')}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors"
+              />
+            </div>
+          </div>
           <DocumentUploader
             label={t('documents.identityProof')}
             document={data.documents?.identityProof}

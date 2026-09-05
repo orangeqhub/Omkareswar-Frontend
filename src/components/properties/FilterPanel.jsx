@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CATEGORIES } from '../../config/categories';
-import { STATES, DISTRICTS, CITIES } from '../../data/locations';
+import { STATES, DISTRICTS, CITIES, CITIES_BY_STATE } from '../../data/locations';
 import { useLanguageStore } from '../../store/languageStore';
 import { getEnabledFilters } from '../../config/propertyFilterConfig';
 import DualRangeSlider from '../common/DualRangeSlider';
@@ -26,10 +26,22 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
   const { t } = useTranslation('properties');
   const language = useLanguageStore((s) => s.language);
 
-  const activeCategory = selectedCategorySlug || filters.categorySlug;
-  const showRoomFilters = isResidentialCategory(activeCategory);
+  const activeCategorySlugs = useMemo(() => {
+    if (hideCategory) return selectedCategorySlug ? [selectedCategorySlug].filter(Boolean) : [];
+    const slugs = Array.isArray(filters.categorySlugs) ? filters.categorySlugs : [];
+    if (slugs.length) return slugs;
+    return filters.categorySlug ? [filters.categorySlug] : [];
+  }, [hideCategory, selectedCategorySlug, filters.categorySlugs, filters.categorySlug]);
+
+  const showRoomFilters = activeCategorySlugs.length === 0 || activeCategorySlugs.some((s) => isResidentialCategory(s));
 
   const enabledFilters = useMemo(() => getEnabledFilters(filterConfig), [filterConfig]);
+
+  // admin-added custom cities (not tied to a state) stay selectable in every state
+  const customCities = useMemo(() => {
+    const knownCities = Object.values(CITIES_BY_STATE).flat();
+    return CITIES.filter((c) => !knownCities.includes(c));
+  }, []);
 
   // ── Cascading location state ──
   const [filterState, setFilterState] = useState(filters.state || '');
@@ -50,9 +62,14 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
 
   function set(patch) {
     const nextFilters = { ...filters, ...patch };
-    const nextCategory = selectedCategorySlug || nextFilters.categorySlug;
+    const slugs = Array.isArray(nextFilters.categorySlugs) && nextFilters.categorySlugs.length
+      ? nextFilters.categorySlugs
+      : selectedCategorySlug ? [selectedCategorySlug].filter(Boolean)
+      : nextFilters.categorySlug ? [nextFilters.categorySlug]
+      : [];
+    const nextResidential = slugs.length === 0 || slugs.some((s) => isResidentialCategory(s));
 
-    if (!isResidentialCategory(nextCategory)) {
+    if (!nextResidential) {
       delete nextFilters.bedrooms;
       delete nextFilters.bathrooms;
       delete nextFilters.furnishing;
@@ -120,6 +137,11 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
   }
 
   function renderCity() {
+    const cityOptions = filterState
+      ? [...(CITIES_BY_STATE[filterState] || []), ...customCities]
+      : [];
+    if (filters.city && !cityOptions.includes(filters.city)) cityOptions.unshift(filters.city);
+
     return (
       <div>
         <label htmlFor="filter-location" className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -129,10 +151,11 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
           id="filter-location"
           value={filters.city || ''}
           onChange={(e) => set({ city: e.target.value || undefined })}
-          className={selectCls}
+          disabled={!filterState}
+          className={selectCls + (!filterState ? ' bg-gray-100 cursor-not-allowed' : '')}
         >
-          <option value="">{t('filters.any')}</option>
-          {CITIES.map(c => (
+          <option value="">{filterState ? t('filters.any') : 'Select State first'}</option>
+          {cityOptions.map(c => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
@@ -144,22 +167,41 @@ export default function FilterPanel({ filters, onChange, onReset, hideCategory, 
     if (hideCategory) return null;
     return (
       <div>
-        <label htmlFor="filter-category" className="mb-1.5 block text-sm font-medium text-gray-700">
+        <span className="mb-1.5 block text-sm font-medium text-gray-700">
           {t('filters.category')}
-        </label>
-        <select
-          id="filter-category"
-          value={filters.categorySlug || ''}
-          onChange={(e) => set({ categorySlug: e.target.value || undefined })}
-          className={selectCls}
-        >
-          <option value="">{t('filters.any')}</option>
-          {CATEGORIES.map(c => (
-            <option key={c.slug} value={c.slug}>{language === 'te' ? c.nameTe : c.nameEn}</option>
-          ))}
-        </select>
+        </span>
+        <div className="flex flex-col gap-2">
+          {CATEGORIES.map(c => {
+            const slug = c.slug;
+            const checked = Array.isArray(filters.categorySlugs)
+              ? filters.categorySlugs.includes(slug)
+              : filters.categorySlug === slug;
+            return (
+              <label key={slug} className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleCategory(slug)}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-600"
+                />
+                {language === 'te' ? c.nameTe : c.nameEn}
+              </label>
+            );
+          })}
+        </div>
       </div>
     );
+  }
+
+  function toggleCategory(slug) {
+    const current = Array.isArray(filters.categorySlugs) ? filters.categorySlugs : [];
+    const next = current.includes(slug)
+      ? current.filter(s => s !== slug)
+      : [...current, slug];
+    set({
+      categorySlugs: next.length ? next : undefined,
+      categorySlug: undefined,
+    });
   }
 
   function renderPrice() {

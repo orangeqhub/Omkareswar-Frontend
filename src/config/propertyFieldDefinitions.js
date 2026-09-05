@@ -18,7 +18,7 @@ const LAND_AREA_UNITS = ['Acres', 'Cents', 'Guntas', 'Sq. Yards', 'Hectares'];
 const SOIL_OPTIONS = ['Red Soil', 'Black Soil', 'Sandy', 'Loamy', 'Clay', 'Other'];
 const OWNERSHIP_OPTIONS = ['Freehold', 'Leasehold', 'Co-operative', 'Others'];
 const REGISTRATION_OPTIONS = ['Registered', 'Unregistered', 'Registration Pending'];
-const APPROVAL_PLOT_OPTIONS = ['DTCP', 'CRDA', 'RERA', 'Panchayat', 'Other'];
+const APPROVAL_PLOT_OPTIONS = ['DTCP', 'CRDA', 'RERA', 'Panchayat', 'Municipality', 'Non-Approval', 'Other'];
 const POSSESSION_OPTIONS = ['Ready to Move', 'Under Construction', 'Completed (Occupation Fit)'];
 const BOUNDARY_DIRECTIONS = [
   { id: 'dyn_east', label: 'East', type: 'direction', boundaryId: 'dyn_eastBoundary', feetId: 'dyn_eastFeet' },
@@ -27,6 +27,28 @@ const BOUNDARY_DIRECTIONS = [
   { id: 'dyn_north', label: 'North', type: 'direction', boundaryId: 'dyn_northBoundary', feetId: 'dyn_northFeet' },
 ];
 const DIRECTION_FIELDS = BOUNDARY_DIRECTIONS.map((d) => ({ ...d, step: 4 }));
+
+// Schedule A / B / C boundary groups (east/south/west/north, each with a
+// boundary detail text and a feet value). Used instead of the single
+// Schedule / Boundaries section for apartments and commercial buildings.
+function scheduleFieldGroup(prefix) {
+  return ['East', 'South', 'West', 'North'].map((dir) => ({
+    id: `dyn_${prefix}_${dir.toLowerCase()}`,
+    label: dir,
+    type: 'direction',
+    boundaryId: `dyn_${prefix}_${dir.toLowerCase()}Boundary`,
+    feetId: `dyn_${prefix}_${dir.toLowerCase()}Feet`,
+    step: 4,
+  }));
+}
+
+const SCHEDULE_A_FIELDS = scheduleFieldGroup('schA');
+const SCHEDULE_B_FIELDS = scheduleFieldGroup('schB');
+const SCHEDULE_C_FIELDS = [
+  { id: 'dyn_schC_groundSqYards', label: 'Ground Sq Yards', type: 'number', step: 4 },
+  { id: 'dyn_schC_totalValuation', label: 'Total Valuation', type: 'number', step: 4 },
+];
+export const SCHEDULE_CATEGORIES = ['apartments', 'commercial-buildings', 'commercial-properties'];
 
 const RESIDENTIAL_PLOT_FIELDS = [
   { id: 'dyn_plotArea', label: 'Plot Area', type: 'number', step: 3 },
@@ -84,7 +106,7 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_facing', label: 'Facing', type: 'select', step: 4, options: FACING_OPTIONS },
       { id: 'dyn_roadWidth', label: 'Road Width', type: 'text', step: 4 },
       { id: 'dyn_cornerPlot', label: 'Corner Plot', type: 'checkbox', step: 4 },
-      { id: 'dyn_commercialApproval', label: 'Commercial Approval', type: 'select', step: 4, options: ['DTCP', 'CRDA', 'RERA', 'Panchayat', 'Municipality', 'Other'] },
+      { id: 'dyn_commercialApproval', label: 'Commercial Approval', type: 'select', step: 4, options: ['DTCP', 'CRDA', 'RERA', 'Panchayat', 'Municipality', 'Non-Approval', 'Other'] },
       { id: 'dyn_suitableFor', label: 'Suitable For', type: 'select', step: 4, options: ['Shop', 'Office', 'Hotel', 'Hospital', 'Showroom', 'Warehouse', 'Other'] },
       { id: 'dyn_surveyNumber', label: 'Survey Number', type: 'text', step: 4 },
       { id: 'dyn_ownershipType', label: 'Ownership Type', type: 'select', step: 4, options: OWNERSHIP_OPTIONS },
@@ -95,7 +117,6 @@ export const CATEGORY_DYNAMIC_FIELDS = {
   'apartments': {
     label: 'Apartments',
     fields: [
-      { id: 'dyn_bhk', label: 'BHK', type: 'select', step: 4, options: ['1 BHK', '2 BHK', '3 BHK', '4+ BHK'] },
       { id: 'dyn_bedrooms', label: 'Bedrooms (BHK)', type: 'number', step: 4 },
       { id: 'dyn_bathrooms', label: 'Bathrooms', type: 'number', step: 4 },
       { id: 'dyn_balconies', label: 'Balconies', type: 'number', step: 4 },
@@ -113,9 +134,9 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_propertyAge', label: 'Property Age', type: 'text', step: 4 },
       { id: 'dyn_constructionYear', label: 'Construction Year', type: 'number', step: 4 },
       { id: 'dyn_possessionStatus', label: 'Possession Status', type: 'select', step: 4, options: POSSESSION_OPTIONS },
-      { id: 'dyn_possessionDate', label: 'Possession Date', type: 'text', step: 4 },
+      { id: 'dyn_possessionDate', label: 'Possession Date', type: 'date', step: 4 },
       { id: 'dyn_propertyStatus', label: 'Property Status', type: 'select', step: 4, options: ['New Property', 'Resale'] },
-      { id: 'dyn_waterSource', label: 'Water Source', type: 'select', step: 4, options: ['Municipal Water', 'Borewell', 'Both', 'Other'] },
+      { id: 'dyn_waterSource', label: 'Water Source', type: 'checkbox-group', step: 4, options: ['Municipal Water', 'Borewell', 'Both', 'Other'] },
       { id: 'dyn_parking', label: 'Parking', type: 'select', step: 4, options: CAR_PARKING_OPTIONS },
       { id: 'dyn_parkingCount', label: 'Parking Count', type: 'number', step: 4 },
       { id: 'dyn_maintenance', label: 'Maintenance Charges (Monthly)', type: 'text', step: 3 },
@@ -123,7 +144,9 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_reraNumber', label: 'RERA Number', type: 'text', step: 4 },
       { id: 'dyn_ownershipType', label: 'Ownership Type', type: 'select', step: 4, options: OWNERSHIP_OPTIONS },
       { id: 'dyn_loanAvailability', label: 'Loan Availability', type: 'checkbox', step: 4 },
-      ...DIRECTION_FIELDS,
+      ...SCHEDULE_A_FIELDS,
+      ...SCHEDULE_B_FIELDS,
+      ...SCHEDULE_C_FIELDS,
     ],
   },
   'independent-houses': {
@@ -203,7 +226,6 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_surveyNumber', label: 'Survey Number', type: 'text', step: 4 },
       { id: 'dyn_landType', label: 'Land Type', type: 'select', step: 4, options: ['Wet Land', 'Dry Land', 'Farm Land', 'Garden', 'Plantation', 'Other'] },
       { id: 'dyn_soilType', label: 'Soil Type', type: 'select', step: 4, options: SOIL_OPTIONS },
-      { id: 'dyn_roadFacing', label: 'Road Facing', type: 'text', step: 4 },
       { id: 'dyn_roadWidth', label: 'Road Width', type: 'text', step: 4 },
       { id: 'dyn_facing', label: 'Land Facing', type: 'select', step: 4, options: FACING_OPTIONS },
       { id: 'dyn_waterAvailability', label: 'Water Availability', type: 'select', step: 4, options: ['Canal', 'River', 'Borewell', 'Well', 'Pond', 'Good', 'Moderate', 'Scarce'] },
@@ -212,7 +234,7 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_agriElectricity', label: 'Agricultural Electricity Connection', type: 'checkbox', step: 4 },
       { id: 'dyn_fencing', label: 'Boundary / Fencing', type: 'checkbox', step: 4 },
       { id: 'dyn_landShape', label: 'Land Shape', type: 'select', step: 4, options: ['Square', 'Rectangular', 'Regular', 'Irregular'] },
-      { id: 'dyn_approachRoad', label: 'Approach Road Type', type: 'select', step: 4, options: ['BT Road', 'CC Road', 'Mud Road', 'Other'] },
+      { id: 'dyn_approachRoad', label: 'Approach Road Type', type: 'select', step: 4, options: ['BT Road', 'CC Road', 'Mud Road', 'Tar Road', 'Govt Donka', 'Private Donka', 'No Roads', 'Other'] },
       { id: 'dyn_distanceFromRoad', label: 'Distance from Main Road', type: 'text', step: 4 },
       { id: 'dyn_ownershipType', label: 'Ownership Type', type: 'select', step: 4, options: OWNERSHIP_OPTIONS },
       { id: 'dyn_registrationStatus', label: 'Registration Status', type: 'select', step: 4, options: REGISTRATION_OPTIONS },
@@ -292,11 +314,11 @@ export const CATEGORY_DYNAMIC_FIELDS = {
   },
   'commercial-buildings': {
     label: 'Commercial Buildings',
-    fields: [...COMMERCIAL_BUILDING_FIELDS, ...DIRECTION_FIELDS],
+    fields: [...COMMERCIAL_BUILDING_FIELDS, ...SCHEDULE_A_FIELDS, ...SCHEDULE_B_FIELDS, ...SCHEDULE_C_FIELDS],
   },
   'commercial-properties': {
     label: 'Commercial Properties',
-    fields: [...COMMERCIAL_BUILDING_FIELDS, ...DIRECTION_FIELDS],
+    fields: [...COMMERCIAL_BUILDING_FIELDS, ...SCHEDULE_A_FIELDS, ...SCHEDULE_B_FIELDS, ...SCHEDULE_C_FIELDS],
   },
   'industrial-lands': {
     label: 'Industrial Lands',
@@ -357,6 +379,35 @@ export const CATEGORY_DYNAMIC_FIELDS = {
   },
 };
 
+// Ensure every category carries the same Property Structure (step 4) fields
+// that Open Plots has. Any field already present (same id) is left untouched.
+const OPEN_PLOT_STRUCTURE_FIELDS = [...RESIDENTIAL_PLOT_FIELDS.filter((f) => f.step === 4), ...DIRECTION_FIELDS];
+
+// Open-plot fields that duplicate or don't belong to a specific category and
+// must not be appended to it (e.g. Approval Type vs Approval Details).
+const CATEGORY_APPEND_EXCLUSIONS = {
+  apartments: new Set(['dyn_approvalType']),
+  'agricultural-lands': new Set(['dyn_approvalType', 'dyn_layoutName']),
+  'commercial-plots': new Set(['dyn_approvalType', 'dyn_layoutName']),
+};
+
+function appendMissingOpenPlotFields(fields, slug) {
+  const existing = new Set(fields.map((f) => f.id));
+  const useSchedules = SCHEDULE_CATEGORIES.includes(slug);
+  const exclusions = CATEGORY_APPEND_EXCLUSIONS[slug];
+  const missing = OPEN_PLOT_STRUCTURE_FIELDS.filter((f) => {
+    if (existing.has(f.id)) return false;
+    if (useSchedules && f.type === 'direction') return false;
+    if (exclusions && exclusions.has(f.id)) return false;
+    return true;
+  });
+  return [...fields, ...missing];
+}
+
+Object.entries(CATEGORY_DYNAMIC_FIELDS).forEach(([slug, cat]) => {
+  cat.fields = appendMissingOpenPlotFields(cat.fields, slug);
+});
+
 export const FIELD_DEFINITIONS = [
   { id: 'titleEn', step: 1, label: 'Property Title', type: 'text', category: 'both' },
   { id: 'descriptionEn', step: 1, label: 'Description', type: 'textarea', category: 'both' },
@@ -365,7 +416,7 @@ export const FIELD_DEFINITIONS = [
   { id: 'state', step: 2, label: 'State', type: 'text', category: 'both' },
   { id: 'district', step: 2, label: 'District', type: 'text', category: 'both' },
   { id: 'mandal', step: 2, label: 'Mandal', type: 'text', category: 'both' },
-  { id: 'cityVillage', step: 2, label: 'City / Village', type: 'text', category: 'both' },
+  { id: 'cityVillage', step: 2, label: 'Village', type: 'text', category: 'both' },
   { id: 'locality', step: 2, label: 'Locality', type: 'text', category: 'both' },
   { id: 'landmark', step: 2, label: 'Landmark', type: 'text', category: 'both' },
   { id: 'pincode', step: 2, label: 'Pincode', type: 'text', category: 'both' },

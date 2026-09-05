@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, X, Heart, MapPin, Tag } from 'lucide-react';
@@ -28,6 +28,19 @@ export default function Navbar() {
   const [logoError, setLogoError] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
 
+  // Close the location picker only on an outside click (not on hover-leave),
+  // so it stays open while the user is typing a search or moving the cursor
+  // towards the dropdown panel.
+  useEffect(() => {
+    if (!locationOpen) return undefined;
+    function handlePointerDown(e) {
+      const inside = Array.from(document.querySelectorAll('[data-location-picker]')).some((el) => el.contains(e.target));
+      if (!inside) setLocationOpen(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [locationOpen]);
+
   const linkClass = ({ isActive }) =>
     `whitespace-nowrap text-sm font-medium transition-colors hover:text-brand-700 ${isActive ? 'text-brand-800' : 'text-gray-700'}`;
 
@@ -44,16 +57,16 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-2.5">
         <Link to="/" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {logoError ? (
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 font-bold text-warm-white sm:h-14 sm:w-14 text-base sm:text-lg">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 font-bold text-warm-white sm:h-16 sm:w-16 text-base sm:text-lg">
               OR
             </span>
           ) : (
-            <span className="flex aspect-square h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100 sm:h-14 sm:w-14">
+            <span className="flex h-12 w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-warm-white ring-1 ring-gray-100 sm:h-14 sm:w-[5.25rem]">
               <img
                 src={logoImage}
                 alt={t('brand.logoAlt')}
                 onError={() => setLogoError(true)}
-                className="h-full w-full object-contain"
+                className="h-full w-full scale-[1.4] object-contain"
               />
             </span>
           )}
@@ -71,7 +84,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <div className="relative" onMouseLeave={() => setLocationOpen(false)}>
+          <div className="relative" data-location-picker>
             <button
               type="button"
               onClick={() => setLocationOpen((o) => !o)}
@@ -167,7 +180,7 @@ export default function Navbar() {
                 {t(link.labelKey)}
               </NavLink>
             ))}
-            <div className="relative" onMouseLeave={() => setLocationOpen(false)}>
+            <div className="relative" data-location-picker>
               <button
                 type="button"
                 onClick={() => setLocationOpen((o) => !o)}

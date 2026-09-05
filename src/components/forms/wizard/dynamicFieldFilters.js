@@ -75,3 +75,26 @@ export function matchesFieldCategory(field, categorySlug, building) {
   if (Array.isArray(cat) && cat.includes(categorySlug)) return true;
   return false;
 }
+
+// Companionship rules: Land Conversion is only meaningful for plot categories,
+// and only when the seller picks an approval type that still requires land
+// conversion (Panchayat / Municipality / Non-Approval).
+export const LAND_CONVERSION_FIELD_ID = 'f_conversion';
+export const PLOT_APPROVAL_CATEGORIES = ['open-plots', 'residential-plots', 'commercial-plots'];
+
+// Agricultural & Commercial lands: area stays in Sq.Ft and price is calculated
+// from Acres (Sq.Ft ÷ 9 = Sq.Yds, Sq.Yds ÷ 48 = Cents, Cents ÷ 100 = Acres).
+export const LAND_PRICE_CATEGORIES = ['agricultural-lands', 'commercial-plots'];
+
+export function isLandConversionField(field) {
+  return field.id === LAND_CONVERSION_FIELD_ID || /conversion/i.test(String(field.label || ''));
+}
+
+export function isApprovalTriggerForConversion(value) {
+  const key = String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return key.includes('panchayat') || key.includes('municipality') || key.includes('nonapproval') || key.includes('unapproved') || key === 'other';
+}
+
+export function shouldShowLandConversion(categorySlug, approvalValue) {
+  return PLOT_APPROVAL_CATEGORIES.includes(categorySlug) && isApprovalTriggerForConversion(approvalValue);
+}

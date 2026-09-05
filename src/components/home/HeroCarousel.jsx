@@ -7,6 +7,7 @@ import { CITIES } from '../../data/locations';
 import { getActiveHeroSlides } from '../../config/heroSlides';
 import { useLanguageStore } from '../../store/languageStore';
 import { useAuthStore } from '../../store/authStore';
+import { useLocationStore } from '../../store/locationStore';
 import { useUserLocationStore } from '../../store/userLocationStore';
 import { toast } from '../../store/toastStore';
 import { resolvePostPropertyAction } from '../../utils/postPropertyAccess';
@@ -93,6 +94,7 @@ export default function HeroCarousel() {
   const { user } = useAuthStore();
   const language = useLanguageStore((s) => s.language);
   const userLocation = useUserLocationStore();
+  const selectedLocation = useLocationStore((s) => s.selectedLocation);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -266,9 +268,17 @@ export default function HeroCarousel() {
     if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
   }
 
-  // Once "Use My Current Location" resolves to a detected place, reflect it
-  // in the search form's own location value so it's both displayed in the
-  // dropdown and used as the city filter on submit.
+  // Mirror the navbar location picker into the search form's location field
+  // so a chosen city (e.g. "Guntur") shows here and is used on submit.
+  useEffect(() => {
+    if (selectedLocation) {
+      setForm((f) => ({ ...f, location: selectedLocation }));
+      setLocInput(selectedLocation);
+    }
+  }, [selectedLocation]);
+
+  // Share the geo-detected location in the search form's own location value
+  // so it's both displayed in the dropdown and used as the city filter on submit.
   useEffect(() => {
     if (userLocation.label) {
       setForm((f) => ({ ...f, location: userLocation.label }));
