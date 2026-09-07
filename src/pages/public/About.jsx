@@ -4,7 +4,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import * as Icons from 'lucide-react';
 import {
   ChevronRight,
   ShieldCheck,
@@ -26,8 +25,13 @@ import {
   Heart,
   Compass,
   LifeBuoy,
+  Home,
+  Send,
+  XCircle,
 } from 'lucide-react';
+import { lucideIcon } from '../../utils/lucideIcons';
 import { cmsService } from '../../services/cmsService';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
 import { enquiryService } from '../../services/enquiryService';
 import { notificationService } from '../../services/notificationService';
 import { useLanguageStore } from '../../store/languageStore';
@@ -196,9 +200,15 @@ export default function About() {
               </div>
             </div>
             <img
-              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=70"
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=70&fm=webp"
+              srcSet={responsiveSrcSet('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=70&fm=webp', [400, 700, 900])}
+              sizes="(min-width: 768px) 50vw, 100vw"
               alt=""
               loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              width={900}
+              height={600}
               className="h-64 w-full rounded-2xl object-cover shadow-md sm:h-80"
             />
           </div>
@@ -209,9 +219,14 @@ export default function About() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <img
-            src="https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70"
+            src="https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70&fm=webp"
+            srcSet={responsiveSrcSet('https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70&fm=webp', [400, 700, 900])}
+            sizes="(min-width: 768px) 50vw, 100vw"
             alt=""
             loading="lazy"
+            decoding="async"
+            width={900}
+            height={600}
             className="h-72 w-full rounded-2xl object-cover shadow-md md:order-2"
           />
           <div>
@@ -256,9 +271,14 @@ export default function About() {
               </div>
             </div>
             <img
-              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=70"
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=70&fm=webp"
+              srcSet={responsiveSrcSet('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=70&fm=webp', [400, 700, 900])}
+              sizes="(min-width: 768px) 50vw, 100vw"
               alt=""
               loading="lazy"
+              decoding="async"
+              width={900}
+              height={600}
               className="h-72 w-full rounded-2xl object-cover shadow-md"
             />
           </div>
@@ -271,7 +291,7 @@ export default function About() {
           <h2 className="text-xl font-bold text-brand-800 sm:text-2xl">{t('aboutPage.servicesTitle')}</h2>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {ABOUT_SERVICES.map((service) => {
-              const Icon = Icons[service.icon] || Icons.Home;
+              const Icon = lucideIcon(service.icon, Home);
               return (
                 <Link
                   key={service.key}
@@ -330,7 +350,17 @@ export default function About() {
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {POPULAR_LOCATIONS.map((loc) => (
             <Link key={loc.city} to={`/properties?city=${encodeURIComponent(loc.city)}`} className="group text-center">
-              <img src={loc.image} alt="" loading="lazy" className="h-20 w-full rounded-xl object-cover shadow-sm transition-transform group-hover:scale-105" />
+              <img
+                  src={loc.image}
+                  srcSet={responsiveSrcSet(loc.image, [200, 400, 600])}
+                  sizes="(min-width: 1024px) 16.66vw, (min-width: 640px) 33vw, 50vw"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width={600}
+                  height={400}
+                  className="h-20 w-full rounded-xl object-cover shadow-sm transition-transform group-hover:scale-105"
+                />
               <p className="mt-2 text-sm font-semibold text-gray-800">{loc.city}</p>
             </Link>
           ))}
@@ -549,7 +579,7 @@ export default function About() {
                     />
                   </svg>
                   <div className="animate-float-plane">
-                    <Icons.Send className="h-10 w-10 text-brand-600" />
+                    <Send className="h-10 w-10 text-brand-600" />
                   </div>
                 </div>
                 <h3 className="mt-6 text-xl font-bold text-brand-800">Sending your message...</h3>
@@ -591,7 +621,7 @@ export default function About() {
             ) : (
               <div className="rounded-xl border border-gray-200 bg-warm-white p-5 shadow-sm min-h-[400px] flex flex-col items-center justify-center text-center animate-scale">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-600">
-                  <Icons.XCircle className="h-12 w-12" />
+                  <XCircle className="h-12 w-12" />
                 </div>
                 <h3 className="mt-6 text-xl font-bold text-red-800">Message Could Not Be Sent</h3>
                 <p className="mt-2 text-sm text-gray-500 max-w-xs">

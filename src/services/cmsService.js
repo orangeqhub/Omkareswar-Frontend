@@ -4,14 +4,27 @@ function unwrap(response) {
   return response?.data?.data ?? response?.data;
 }
 
+let cmsPromise = null;
+
 async function getCms() {
-  const response = await apiClient.get('/cms');
-  return unwrap(response);
+  if (!cmsPromise) {
+    cmsPromise = apiClient.get('/cms').then(unwrap).catch((err) => {
+      cmsPromise = null;
+      throw err;
+    });
+  }
+  return cmsPromise;
+}
+
+function invalidateCms() {
+  cmsPromise = null;
 }
 
 async function updateCms(patch) {
   const response = await apiClient.patch('/admin/cms', patch);
-  return unwrap(response);
+  const data = unwrap(response);
+  cmsPromise = Promise.resolve(data);
+  return data;
 }
 
-export const cmsService = { getCms, updateCms };
+export const cmsService = { getCms, updateCms, invalidateCms };

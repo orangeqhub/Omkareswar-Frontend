@@ -12,7 +12,7 @@ export default function ImageGallery({ images = [], title }) {
   return (
     <div>
       <div className="aspect-video w-full overflow-hidden rounded-xl bg-gray-100">
-        <img src={resolveMediaUrl(ordered[active].url)} alt={ordered[active].caption || title} className="h-full w-full object-cover" />
+        <img src={resolveMediaUrl(ordered[active].url)} alt={ordered[active].caption || title} width={640} height={360} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       </div>
       {ordered.length > 1 && (
         <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-none">

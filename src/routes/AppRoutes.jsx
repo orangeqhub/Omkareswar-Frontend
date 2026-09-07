@@ -7,20 +7,21 @@ import RequirePermission from '../components/common/RequirePermission';
 import RouteLoadingFallback from '../components/common/RouteLoadingFallback';
 
 import Home from '../pages/public/Home';
-import PropertyListing from '../pages/public/PropertyListing';
-import PropertyDetail from '../pages/public/PropertyDetail';
-import Ventures from '../pages/public/Ventures';
-import About from '../pages/public/About';
-import Wishlist from '../pages/public/Wishlist';
-import PostPropertyType from '../pages/public/PostPropertyType';
-import Unauthorized from '../pages/public/Unauthorized';
-import NotFound from '../pages/public/NotFound';
 
-import Register from '../pages/auth/Register';
-import Login from '../pages/auth/Login';
-import AdminLogin from '../pages/auth/AdminLogin';
-import EmployeeLogin from '../pages/auth/EmployeeLogin';
-import ApplicationStatus from '../pages/auth/ApplicationStatus';
+const PropertyListing = lazy(() => import('../pages/public/PropertyListing'));
+const PropertyDetail = lazy(() => import('../pages/public/PropertyDetail'));
+const Ventures = lazy(() => import('../pages/public/Ventures'));
+const About = lazy(() => import('../pages/public/About'));
+const Wishlist = lazy(() => import('../pages/public/Wishlist'));
+const PostPropertyType = lazy(() => import('../pages/public/PostPropertyType'));
+const Unauthorized = lazy(() => import('../pages/public/Unauthorized'));
+const NotFound = lazy(() => import('../pages/public/NotFound'));
+
+const Register = lazy(() => import('../pages/auth/Register'));
+const Login = lazy(() => import('../pages/auth/Login'));
+const AdminLogin = lazy(() => import('../pages/auth/AdminLogin'));
+const EmployeeLogin = lazy(() => import('../pages/auth/EmployeeLogin'));
+const ApplicationStatus = lazy(() => import('../pages/auth/ApplicationStatus'));
 import PortalAreaGate from '../components/common/PortalAreaGate';
 
 // Dashboards, Recharts pages and other heavy admin modules are code-split

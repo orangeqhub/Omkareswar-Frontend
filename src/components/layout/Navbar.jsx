@@ -65,6 +65,9 @@ export default function Navbar() {
               <img
                 src={logoImage}
                 alt={t('brand.logoAlt')}
+                width={192}
+                height={192}
+                decoding="async"
                 onError={() => setLogoError(true)}
                 className="h-full w-full scale-[1.4] object-contain"
               />

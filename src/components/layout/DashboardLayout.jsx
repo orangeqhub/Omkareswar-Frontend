@@ -1,8 +1,8 @@
 import { Suspense, useState } from 'react';
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as Icons from 'lucide-react';
-import { Menu, X, LogOut, ChevronRight, Tag } from 'lucide-react';
+import { Menu, X, LogOut, ChevronRight, Tag, Circle } from 'lucide-react';
+import { lucideIcon } from '../../utils/lucideIcons';
 import LanguageToggle from '../common/LanguageToggle';
 import NotificationBell from '../dashboard/NotificationBell';
 import RouteLoadingFallback from '../common/RouteLoadingFallback';
@@ -12,7 +12,7 @@ import { hasPermission } from '../../utils/permissions';
 import { getLogoutRedirectPath } from '../../utils/logoutRedirect';
 
 function NavIcon({ name, ...props }) {
-  const Icon = Icons[name] || Icons.Circle;
+  const Icon = lucideIcon(name, Circle);
   return <Icon {...props} />;
 }
 

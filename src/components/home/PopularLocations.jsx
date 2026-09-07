@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { propertyService } from '../../services/propertyService';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
 
 export default function PopularLocations() {
   const { t } = useTranslation('common');
@@ -25,7 +26,17 @@ export default function PopularLocations() {
             to={`/properties?city=${encodeURIComponent(loc.city)}`}
             className="group relative h-28 overflow-hidden rounded-xl shadow-sm"
           >
-            <img src={loc.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+            <img
+              src={loc.image}
+              srcSet={responsiveSrcSet(loc.image, [320, 600, 900])}
+              sizes="(min-width: 1024px) 16.66vw, (min-width: 640px) 33vw, 50vw"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              width={600}
+              height={400}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            />
             <div className="absolute inset-0 bg-black/40" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-warm-white">
               <span className="font-semibold">{loc.city}</span>

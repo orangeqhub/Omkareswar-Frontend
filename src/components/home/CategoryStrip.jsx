@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as Icons from 'lucide-react';
+import { Home } from 'lucide-react';
+import { lucideIcon } from '../../utils/lucideIcons';
 import { CATEGORIES } from '../../config/categories';
 import { useLanguageStore } from '../../store/languageStore';
 import { propertyService } from '../../services/propertyService';
@@ -27,7 +28,7 @@ export default function CategoryStrip() {
       <h2 className="text-xl font-bold text-brand-800 sm:text-2xl">{t('sections.categories')}</h2>
       <div className="mt-5 flex gap-4 overflow-x-auto scrollbar-none sm:grid sm:grid-cols-4 sm:gap-4 sm:overflow-visible lg:grid-cols-8">
         {CATEGORIES.map((cat) => {
-          const Icon = Icons[cat.icon] || Icons.Home;
+          const Icon = lucideIcon(cat.icon, Home);
           return (
             <Link
               key={cat.slug}
@@ -40,8 +41,11 @@ export default function CategoryStrip() {
                     <img
                       src={resolveMediaUrl(cat.image)}
                       alt=""
+                      width={64}
+                      height={64}
                       className="h-full w-full object-cover"
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.style.display = 'none';
                       }}

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { cmsService } from '../../services/cmsService';
 import { useLanguageStore } from '../../store/languageStore';
 import { getLocalizedField } from '../../utils/localize';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
 
 export default function AboutSection() {
   const { t } = useTranslation('common');
@@ -17,9 +18,14 @@ export default function AboutSection() {
     <section className="bg-brand-50">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-2 md:items-center">
         <img
-          src="https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70"
+          src="https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70&fm=webp"
+          srcSet={responsiveSrcSet('https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=900&q=70&fm=webp', [400, 700, 900])}
+          sizes="(min-width: 768px) 50vw, 100vw"
           alt=""
           loading="lazy"
+          decoding="async"
+          width={900}
+          height={600}
           className="h-64 w-full rounded-2xl object-cover shadow-md md:h-80"
         />
         <div>

@@ -13,6 +13,7 @@ import { toast } from '../../store/toastStore';
 import { resolvePostPropertyAction } from '../../utils/postPropertyAccess';
 import { settingsService } from '../../services/settingsService';
 import { loadGoogleMapsScript } from '../../utils/googleMaps';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
 
 function getGoogleString(obj) {
   if (!obj) return '';
@@ -340,9 +341,15 @@ export default function HeroCarousel() {
         <img
           key={s.id}
           src={s.image}
+          srcSet={responsiveSrcSet(s.image, [640, 960, 1280, 1600])}
+          sizes="100vw"
           alt=""
           aria-hidden={i !== index}
           loading={i === 0 ? 'eager' : 'lazy'}
+          fetchPriority={i === 0 ? 'high' : 'low'}
+          decoding="async"
+          width={1600}
+          height={620}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
             prefersReducedMotion ? 'duration-0' : 'duration-700'
           } ${i === index ? 'opacity-100' : 'opacity-0'}`}

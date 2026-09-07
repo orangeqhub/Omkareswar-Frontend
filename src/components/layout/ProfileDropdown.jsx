@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, LogOut } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { ChevronDown, LogOut, Circle } from 'lucide-react';
+import { lucideIcon } from '../../utils/lucideIcons';
 import { useAuthStore } from '../../store/authStore';
 import { PROFILE_MENU, PROFILE_ROUTE } from '../../config/profileMenu';
 import { getInitials } from '../../utils/avatar';
@@ -25,7 +25,7 @@ const ROLE_BADGE = {
 };
 
 function MenuIcon({ name, ...props }) {
-  const Icon = Icons[name] || Icons.Circle;
+  const Icon = lucideIcon(name, Circle);
   return <Icon {...props} />;
 }
 

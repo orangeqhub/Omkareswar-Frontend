@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as Icons from 'lucide-react';
+import { Home } from 'lucide-react';
+import { lucideIcon } from '../../utils/lucideIcons';
 import { CATEGORIES } from '../../config/categories';
 import { useLanguageStore } from '../../store/languageStore';
 import { useAuthStore } from '../../store/authStore';
 import { resolveMediaUrl } from '../../store/url';
 
 function TypeIcon({ name, ...props }) {
-  const Icon = Icons[name] || Icons.Home;
+  const Icon = lucideIcon(name, Home);
   return <Icon {...props} />;
 }
 
@@ -42,8 +43,11 @@ export default function PostPropertyType() {
                   <img
                     src={resolveMediaUrl(category.image)}
                     alt=""
+                    width={64}
+                    height={64}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}

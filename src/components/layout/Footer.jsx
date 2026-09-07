@@ -77,7 +77,7 @@ export default function Footer() {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="flex h-14 w-[5.25rem] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-warm-white sm:h-16 sm:w-24">
-              <img src={logoImage} alt={t('brand.logoAlt')} className="h-full w-full scale-[1.4] object-contain" />
+              <img src={logoImage} alt={t('brand.logoAlt')} width={192} height={192} decoding="async" className="h-full w-full scale-[1.4] object-contain" />
             </span>
             <h2 className="text-lg font-bold text-warm-white">{t('brand.name')}</h2>
           </div>
