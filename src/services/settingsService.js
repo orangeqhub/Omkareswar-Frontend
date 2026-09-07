@@ -9,8 +9,10 @@ async function getSettings() {
   return unwrap(response);
 }
 
-async function getPublicSettings() {
-  const response = await apiClient.get('/admin/settings/public');
+async function getPublicSettings(role) {
+  const response = await apiClient.get('/admin/settings/public', {
+    params: role ? { role } : undefined,
+  });
   return unwrap(response);
 }
 

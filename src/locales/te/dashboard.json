@@ -9,6 +9,25 @@
     "reactivate": "తిరిగి సక్రియం చేయండి",
     "deactivate": "నిష్క్రియం చేయండి"
   },
+  "manager": {
+    "home": {
+      "title": "మేనేజర్ డాష్‌బోర్డ్",
+      "openSection": "విభాగాన్ని తెరవండి",
+      "noSectionsTitle": "మేనేజర్ పోర్టల్‌కు స్వాగతం",
+      "noSectionsBody": "మీ ఖాతాకు ఇంకా ఏ విభాగాలు కేటాయించబడలేదు. దయచేసి నిర్వాహకుడిని సంప్రదించండి."
+    },
+    "stats": {
+      "totalProperties": "మొత్తం ఆస్తులు",
+      "pendingProperties": "పెండింగ్ ఆస్తులు",
+      "enquiries": "విచారణలు",
+      "categories": "వర్గాలు",
+      "mediaRules": "మీడియా నియమాలు",
+      "cms": "CMS కంటెంట్",
+      "locations": "కస్టమ్ లొకేషన్లు",
+      "propertyFields": "ప్రాపర్టీ ఫీల్డ్‌లు",
+      "registrationForms": "నమోదు ఫారమ్‌లు"
+    }
+  },
   "admin": {
     "summary": "సారాంశం",
     "pendingRegistrations": "పెండింగ్ నమోదులు",

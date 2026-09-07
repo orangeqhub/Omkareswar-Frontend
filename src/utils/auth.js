@@ -15,6 +15,7 @@ export function isAccountActive(userOrStatus) {
 export function getRoleDashboardPath(role) {
   const dashboardPaths = {
     admin: '/admin/dashboard',
+    manager: '/manager/home',
     employee: '/employee/dashboard',
     buyer: '/buyer/dashboard',
     seller: '/seller/dashboard',

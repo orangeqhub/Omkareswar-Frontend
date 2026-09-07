@@ -87,6 +87,32 @@ async function loginEmployee(
   return data.user;
 }
 
+async function loginManager(
+  managerId,
+  password,
+  remember = true
+) {
+  const response = await apiClient.post(
+    '/auth/manager/login',
+    {
+      managerId,
+      password,
+    }
+  );
+
+  const data = getResponseData(response);
+
+  saveTokens(
+    {
+      token: data.token,
+      refreshToken: data.refreshToken,
+    },
+    remember
+  );
+
+  return data.user;
+}
+
 async function getSession() {
   if (!getAccessToken()) {
     return null;
@@ -133,13 +159,23 @@ async function resetAdminPassword(adminIdOrMobile, newPassword) {
   return getResponseData(response);
 }
 
+async function resetManagerPassword(managerIdOrMobile, newPassword) {
+  const response = await apiClient.post('/auth/manager/reset-password', {
+    managerId: managerIdOrMobile,
+    newPassword,
+  });
+  return getResponseData(response);
+}
+
 export const authService = {
   requestOtp,
   loginPublicWithOtp,
   loginAdmin,
   loginEmployee,
+  loginManager,
   resetEmployeePassword,
   resetAdminPassword,
+  resetManagerPassword,
   getSession,
   logout,
 };

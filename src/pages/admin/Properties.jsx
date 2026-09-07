@@ -3,11 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Search, MapPin, Hash, X } from 'lucide-react';
 import PropertyModerationList from '../../components/dashboard/PropertyModerationList';
 import { categoryService } from '../../services/categoryService';
+import { useAuthStore } from '../../store/authStore';
 
 const TABS = ['pending', 'active', 'changes_requested', 'rejected', 'draft'];
 
 export default function Properties() {
   const { t } = useTranslation('common');
+  const user = useAuthStore((state) => state.user);
+  const isManager = user?.role === 'manager';
   const [tab, setTab] = useState('pending');
   const [categories, setCategories] = useState([]);
   const [categorySlug, setCategorySlug] = useState('');
@@ -18,10 +21,10 @@ export default function Properties() {
 
   useEffect(() => {
     categoryService
-      .getCategories()
+      [isManager ? 'getPublicCategories' : 'getCategories']()
       .then(setCategories)
       .catch(() => {});
-  }, []);
+  }, [isManager]);
 
   const applyFilters = () => {
     setLocation(locationInput.trim());

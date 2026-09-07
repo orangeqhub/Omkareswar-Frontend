@@ -7,9 +7,13 @@ import { CATEGORY_GROUPS, getAmenitiesForCategory, getAmenityCategorySlugs } fro
 import { FIELD_DEFINITIONS, FIELD_STEPS, CATEGORY_DYNAMIC_FIELDS } from '../../config/propertyFieldDefinitions';
 import { FILTER_DEFINITIONS, isFilterEnabled, getFilterOrder, getCustomFilterDefs, CUSTOM_FILTER_SUGGESTIONS } from '../../config/propertyFilterConfig';
 import AmenityIcon from '../../components/common/AmenityIcon';
+import { getCategoryGroupKey } from '../../config/categoryConfig';
+
+const PROPERTY_CATEGORIES = CATEGORY_GROUPS.flatMap((group) => group.slugs);
 
 export default function PropertyFields() {
   const [settings, setSettings] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(PROPERTY_CATEGORIES[0] || 'open-plots');
   const [savingField, setSavingField] = useState(null);
 
   const [showFieldModal, setShowFieldModal] = useState(false);
@@ -52,6 +56,15 @@ export default function PropertyFields() {
   const fieldConfig = settings?.fieldConfig || {};
   const amenitiesByCategory = settings?.amenitiesByCategory || {};
   const filterConfig = settings?.filterConfig || {};
+
+  function fieldMatchesCategory(field, categorySlug) {
+    const category = field.category || 'both';
+    if (category === 'both' || category === categorySlug) return true;
+    if (Array.isArray(category)) return category.includes(categorySlug);
+    return category === getCategoryGroupKey(categorySlug);
+  }
+
+  const visiblePropertyFields = propertyFields.filter((field) => fieldMatchesCategory(field, activeCategory));
 
   function getBuiltinConfig(fieldId) {
     return fieldConfig[fieldId] || { enabled: true, required: false };
@@ -558,7 +571,7 @@ export default function PropertyFields() {
   });
 
   const adminBuiltinFields = propertyFields.filter((f) => f.builtin === true);
-  const customOnlyFields = propertyFields.filter((f) => f.builtin !== true);
+  const customOnlyFields = visiblePropertyFields.filter((f) => f.builtin !== true);
 
   function resolveBuiltinStep(f) {
     if (f.step === undefined || f.step === null || f.step === '') return 4;
@@ -594,6 +607,25 @@ export default function PropertyFields() {
       <p className="text-sm text-gray-500">
         Control which fields appear on the property form. Edit labels, enable/disable, make required, and add custom or built-in fields for any wizard step. Changes reflect on the user property form immediately.
       </p>
+
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-3" role="tablist" aria-label="Property field categories">
+        {PROPERTY_CATEGORIES.map((categorySlug) => (
+          <button
+            key={categorySlug}
+            type="button"
+            role="tab"
+            aria-selected={activeCategory === categorySlug}
+            onClick={() => setActiveCategory(categorySlug)}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              activeCategory === categorySlug
+                ? 'bg-brand-600 text-warm-white'
+                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {getCategoryLabel(categorySlug)}
+          </button>
+        ))}
+      </div>
 
       {/* Built-in Fields */}
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -632,8 +664,8 @@ export default function PropertyFields() {
         <div className="space-y-6">
           {STEP_ORDER.map((sn) => {
             const defsByCat = STEP_CATS[String(sn)] || {};
-            const addedForStep = adminBuiltinFields.filter((f) => resolveBuiltinStep(f) === sn);
-            const hasConfigFields = Object.keys(defsByCat).length > 0;
+            const addedForStep = adminBuiltinFields.filter((f) => resolveBuiltinStep(f) === sn && fieldMatchesCategory(f, activeCategory));
+            const hasConfigFields = Object.values(defsByCat).some((fields) => fields.some((field) => fieldMatchesCategory(field, activeCategory)));
             if (!hasConfigFields && addedForStep.length === 0) return null;
             return (
               <div key={sn}>
@@ -642,14 +674,17 @@ export default function PropertyFields() {
                   Step {sn} &mdash; {FIELD_STEPS[sn]}
                 </p>
 
-                {Object.entries(defsByCat).map(([catKey, fields]) => (
+                {Object.entries(defsByCat).map(([catKey, fields]) => {
+                  const categoryFields = fields.filter((field) => fieldMatchesCategory(field, activeCategory));
+                  if (categoryFields.length === 0) return null;
+                  return (
                   <div key={catKey} className="mb-4">
                     <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-2">
                       <span className="shrink-0 text-[10px] font-medium text-blue-500 bg-blue-50 rounded px-1.5 py-0.5">{getCategoryLabel(catKey)}</span>
                       <span className="text-gray-400 normal-case tracking-normal">{fields.length} field(s)</span>
                     </p>
                     <div className="rounded-lg border border-gray-100 divide-y divide-gray-100">
-                      {fields.map((def) => {
+                      {categoryFields.map((def) => {
                         const cfg = getBuiltinConfig(def.id);
                         const isEnabled = cfg.enabled !== false;
                         const isRequired = cfg.required === true;
@@ -721,7 +756,8 @@ export default function PropertyFields() {
                       })}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
 
                 {addedForStep.length > 0 && (
                   <div>

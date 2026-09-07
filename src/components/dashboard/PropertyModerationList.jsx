@@ -33,7 +33,7 @@ export default function PropertyModerationList({ statusFilter = 'pending', scope
       params.viewer = user;
       params.scopeMode = 'employee';
     }
-    if (user?.role === 'admin') {
+    if (user?.role === 'admin' || user?.role === 'manager') {
       propertyService.getAdminProperties(params).then(setProperties);
     } else {
       propertyService.getProperties(params).then((r) => setProperties(r.items));

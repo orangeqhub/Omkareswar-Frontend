@@ -7,6 +7,7 @@
  */
 export function getLogoutRedirectPath(role) {
   if (role === 'admin') return '/admin';
+  if (role === 'manager') return '/manager';
   if (role === 'employee') return '/employee';
   return '/login';
 }

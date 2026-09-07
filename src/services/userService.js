@@ -58,6 +58,25 @@ async function setEmployeeStatus(_adminViewer, employeeId, status) {
   return unwrap(response);
 }
 
+async function createManager(data) {
+  const response = await apiClient.post('/admin/managers', data);
+  return unwrap(response);
+}
+
+async function updateManagerPermissions(managerId, permissions) {
+  const response = await apiClient.put(`/admin/managers/${managerId}/permissions`, {
+    permissions,
+  });
+  return unwrap(response);
+}
+
+async function setManagerStatus(managerId, status) {
+  const response = await apiClient.patch(`/admin/managers/${managerId}/status`, {
+    status,
+  });
+  return unwrap(response);
+}
+
 async function assignMediator(userId, mediatorId) {
   const response = await apiClient.patch(`/admin/users/${userId}/assign-mediator`, {
     mediatorId,
@@ -97,6 +116,9 @@ export const userService = {
   createEmployee,
   updatePermissions,
   setEmployeeStatus,
+  createManager,
+  updateManagerPermissions,
+  setManagerStatus,
   assignMediator,
   assignEmployee,
   createUser,

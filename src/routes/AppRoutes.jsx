@@ -21,6 +21,7 @@ const Register = lazy(() => import('../pages/auth/Register'));
 const Login = lazy(() => import('../pages/auth/Login'));
 const AdminLogin = lazy(() => import('../pages/auth/AdminLogin'));
 const EmployeeLogin = lazy(() => import('../pages/auth/EmployeeLogin'));
+const ManagerLogin = lazy(() => import('../pages/auth/ManagerLogin'));
 const ApplicationStatus = lazy(() => import('../pages/auth/ApplicationStatus'));
 import PortalAreaGate from '../components/common/PortalAreaGate';
 
@@ -81,6 +82,7 @@ const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'));
 const AdminRegistrations = lazy(() => import('../pages/admin/Registrations'));
 const AdminUsers = lazy(() => import('../pages/admin/Users'));
 const AdminEmployees = lazy(() => import('../pages/admin/Employees'));
+const AdminManagers = lazy(() => import('../pages/admin/Managers'));
 const AdminAssignments = lazy(() => import('../pages/admin/Assignments'));
 const AdminActivities = lazy(() => import('../pages/admin/Activities'));
 const AdminProperties = lazy(() => import('../pages/admin/Properties'));
@@ -99,6 +101,10 @@ const AdminLocations = lazy(() => import('../pages/admin/Locations'));
 const AdminPropertyFields = lazy(() => import('../pages/admin/PropertyFields'));
 const AdminRegistrationForms = lazy(() => import('../pages/admin/RegistrationForms'));
 const AdminEditProperty = lazy(() => import('../pages/seller/EditProperty'));
+
+const ManagerHome = lazy(() => import('../pages/manager/Home'));
+const ManagerSettings = lazy(() => import('../pages/manager/Settings'));
+const ManagerProfile = lazy(() => import('../pages/manager/Profile'));
 
 function DashboardRoute({ role }) {
   return (
@@ -238,6 +244,50 @@ export default function AppRoutes() {
         </Route>
 
         <Route
+          path="/manager"
+          element={<PortalAreaGate role="manager" dashboardPath="/manager/home" LoginComponent={ManagerLogin} />}
+        >
+          <Route path="home" element={<ManagerHome />} />
+          <Route
+            path="properties"
+            element={<RequirePermission permission="MANAGER_PROPERTIES_VIEW"><AdminProperties /></RequirePermission>}
+          />
+          <Route
+            path="enquiries"
+            element={<RequirePermission permission="MANAGER_ENQUIRIES_VIEW"><AdminEnquiries /></RequirePermission>}
+          />
+          <Route
+            path="categories"
+            element={<RequirePermission permission="MANAGER_CATEGORIES_VIEW"><AdminCategories /></RequirePermission>}
+          />
+          <Route
+            path="media-rules"
+            element={<RequirePermission permission="MANAGER_MEDIA_RULES_VIEW"><AdminMediaRules /></RequirePermission>}
+          />
+          <Route
+            path="cms"
+            element={<RequirePermission permission="MANAGER_CMS_VIEW"><AdminCms /></RequirePermission>}
+          />
+          <Route
+            path="locations"
+            element={<RequirePermission permission="MANAGER_LOCATIONS_VIEW"><AdminLocations /></RequirePermission>}
+          />
+          <Route
+            path="property-fields"
+            element={<RequirePermission permission="MANAGER_PROPERTY_FIELDS_VIEW"><AdminPropertyFields /></RequirePermission>}
+          />
+          <Route
+            path="registration-forms"
+            element={<RequirePermission permission="MANAGER_REGISTRATION_FORMS_VIEW"><AdminRegistrationForms /></RequirePermission>}
+          />
+          <Route
+            path="settings"
+            element={<RequirePermission permission="MANAGER_SETTINGS_VIEW"><ManagerSettings /></RequirePermission>}
+          />
+          <Route path="profile" element={<ManagerProfile />} />
+        </Route>
+
+        <Route
           path="/admin"
           element={<PortalAreaGate role="admin" dashboardPath="/admin/dashboard" LoginComponent={AdminLogin} />}
         >
@@ -245,6 +295,7 @@ export default function AppRoutes() {
           <Route path="registrations" element={<AdminRegistrations />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="employees" element={<AdminEmployees />} />
+          <Route path="managers" element={<AdminManagers />} />
           <Route path="assignments" element={<AdminAssignments />} />
           <Route path="activities" element={<AdminActivities />} />
           <Route path="properties" element={<AdminProperties />} />

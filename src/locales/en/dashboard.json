@@ -9,6 +9,25 @@
     "reactivate": "Reactivate",
     "deactivate": "Deactivate"
   },
+  "manager": {
+    "home": {
+      "title": "Manager Dashboard",
+      "openSection": "Open section",
+      "noSectionsTitle": "Welcome to the Manager Portal",
+      "noSectionsBody": "No sections have been assigned to your account yet. Please contact the administrator."
+    },
+    "stats": {
+      "totalProperties": "Total Properties",
+      "pendingProperties": "Pending Properties",
+      "enquiries": "Enquiries",
+      "categories": "Categories",
+      "mediaRules": "Media Rules",
+      "cms": "CMS Content",
+      "locations": "Custom Locations",
+      "propertyFields": "Property Fields",
+      "registrationForms": "Registration Forms"
+    }
+  },
   "admin": {
     "summary": "Summary",
     "pendingRegistrations": "Pending Registrations",

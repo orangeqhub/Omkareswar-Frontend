@@ -7,6 +7,8 @@ import { toast } from '../../store/toastStore';
 import EmptyState from '../../components/common/EmptyState';
 import apiClient from '../../services/apiClient';
 import { resolveMediaUrl } from '../../store/url';
+import { useAuthStore } from '../../store/authStore';
+import { hasPermission } from '../../utils/permissions';
 
 const AREA_UNITS = ['sqft', 'sqyd', 'acre', 'cent'];
 const TRANSACTION_TYPES = ['sale'];
@@ -30,6 +32,7 @@ function emptyForm() {
 
 export default function Categories() {
   const { t } = useTranslation(['dashboard', 'common']);
+  const user = useAuthStore((state) => state.user);
   const [categories, setCategories] = useState(null);
   const [counts, setCounts] = useState({});
   const [editing, setEditing] = useState(null);
@@ -62,6 +65,11 @@ export default function Categories() {
 
   function load() {
     categoryService.getCategories().then(setCategories);
+    const canReadProperties = user?.role === 'admin' || hasPermission(user, 'MANAGER_PROPERTIES_VIEW');
+    if (!canReadProperties) {
+      setCounts({});
+      return;
+    }
     propertyService.getProperties({ includeAllStatuses: true, pageSize: 1000 }).then((r) => {
       const tally = {};
       for (const p of r.items) tally[p.categorySlug] = (tally[p.categorySlug] || 0) + 1;
@@ -69,7 +77,7 @@ export default function Categories() {
     });
   }
 
-  useEffect(load, []);
+  useEffect(load, [user]);
 
   function openCreate() {
     setForm(emptyForm());

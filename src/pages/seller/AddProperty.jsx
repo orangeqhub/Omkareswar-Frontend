@@ -74,7 +74,7 @@ export default function AddProperty() {
         }
       })
       .catch((err) => console.error('Failed to load fields configurations:', err));
-  }, []);
+  }, [user?.role]);
 
   const liveScore = useMemo(() => {
     const dynamic = {};

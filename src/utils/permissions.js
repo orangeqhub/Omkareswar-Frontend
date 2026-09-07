@@ -49,7 +49,7 @@ export function requirePermission(user, permission) {
   /*
    * Employee workflow ni employee/admin matrame access cheyyali.
    */
-  if (user.role !== 'employee') {
+  if (user.role !== 'employee' && user.role !== 'manager') {
     throw new Error(
       'permission.error.wrongRole'
     );
@@ -57,7 +57,7 @@ export function requirePermission(user, permission) {
 
   /*
    * Permission argument provide chesinappudu,
-   * employee ki aa permission compulsory.
+   * employee/manager ki aa permission compulsory.
    */
   if (
     permission &&
