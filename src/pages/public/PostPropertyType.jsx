@@ -6,6 +6,7 @@ import { CATEGORIES } from '../../config/categories';
 import { useLanguageStore } from '../../store/languageStore';
 import { useAuthStore } from '../../store/authStore';
 import { resolveMediaUrl } from '../../store/url';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
 
 function TypeIcon({ name, ...props }) {
   const Icon = lucideIcon(name, Home);
@@ -42,6 +43,8 @@ export default function PostPropertyType() {
                 <>
                   <img
                     src={resolveMediaUrl(category.image)}
+                    srcSet={category.image ? responsiveSrcSet(category.image, [96, 128, 192]) : undefined}
+                    sizes="64px"
                     alt=""
                     width={64}
                     height={64}

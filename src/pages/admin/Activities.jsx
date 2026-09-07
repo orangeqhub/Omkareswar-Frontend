@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Activity, Search, Calendar, User, Clock, Info, ShieldCheck } from 'lucide-react';
+import { Activity, Search, User, Clock, Info } from 'lucide-react';
 import { auditLogService } from '../../services/auditLogService';
 import { userService } from '../../services/userService';
 import { toast } from '../../store/toastStore';
@@ -19,7 +18,6 @@ const ACTIONS = [
 ];
 
 export default function Activities() {
-  const { t } = useTranslation(['dashboard', 'common']);
   const maps = useEntityMaps();
   const [logs, setLogs] = useState([]);
   const [employees, setEmployees] = useState([]);

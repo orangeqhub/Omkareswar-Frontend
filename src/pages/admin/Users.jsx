@@ -3,8 +3,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Download, Plus, Pencil, Trash2, X, FileText, Activity, Clock, MapPin, ShieldCheck, Mail, Phone, Calendar, Eye, EyeOff, Search, PhoneCall } from 'lucide-react';
+import { Download, Plus, Pencil, Trash2, X, Clock, MapPin, ShieldCheck, Mail, Calendar, Eye, EyeOff, Search, PhoneCall } from 'lucide-react';
 
 import { userService } from '../../services/userService';
 import { useAuthStore } from '../../store/authStore';
@@ -56,11 +55,6 @@ function TrackedUserRow({ user, onView }) {
 }
 
 export default function Users() {
-  const { t } = useTranslation([
-    'dashboard',
-    'common',
-  ]);
-
   const [users, setUsers] = useState([]);
   const [mediators, setMediators] = useState([]);
   const [employees, setEmployees] = useState([]);

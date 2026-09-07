@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Search, RefreshCw, CheckCircle, ShieldAlert, Users, CalendarCheck, Inbox, Building2, PhoneCall } from 'lucide-react';
+import { Briefcase, Search, RefreshCw, Users, CalendarCheck, Inbox, Building2, PhoneCall } from 'lucide-react';
 import { assignmentService } from '../../services/assignmentService';
 import { userService } from '../../services/userService';
 import { propertyService } from '../../services/propertyService';

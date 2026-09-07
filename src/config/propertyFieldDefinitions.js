@@ -89,6 +89,38 @@ const COMMERCIAL_BUILDING_FIELDS = [
   { id: 'dyn_loanAvailability', label: 'Loan Availability', type: 'checkbox', step: 4 },
 ];
 
+// Legal / approval documents for apartments. Every document is captured as a
+// Yes/No availability select plus a companion `document` upload field holding
+// the actual certificate file (stored in the property's dynamicFields).
+const APARTMENT_COMPLIANCE_FIELDS = [
+  { id: 'dyn_reraApproved', label: 'RERA Approved Project', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_buildingPlan', label: 'Approved Building Plan', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_buildingPlan_document', label: 'Approved Building Plan Document', type: 'document', step: 4 },
+  { id: 'dyn_oc', label: 'Occupancy Certificate (OC)', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_oc_document', label: 'OC Certificate', type: 'document', step: 4 },
+  { id: 'dyn_cc', label: 'Completion Certificate (CC)', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_cc_document', label: 'CC Certificate', type: 'document', step: 4 },
+  { id: 'dyn_possessionCertificate', label: 'Possession Certificate', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_possessionCertificate_document', label: 'Possession Certificate Document', type: 'document', step: 4 },
+  { id: 'dyn_noc', label: 'NOC – Fire / Electricity / Water', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_noc_document', label: 'NOC Document', type: 'document', step: 4 },
+  { id: 'dyn_mutationCertificate', label: 'Mutation Certificate', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_mutationCertificate_document', label: 'Mutation Certificate Document', type: 'document', step: 4 },
+  { id: 'dyn_propertyTaxReceipts', label: 'Property Tax Receipts', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_propertyTaxReceipts_document', label: 'Property Tax Receipt Document', type: 'document', step: 4 },
+  { id: 'dyn_societyDocuments', label: 'Society Documents', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_societyDocuments_document', label: 'Society Documents', type: 'document', step: 4 },
+  { id: 'dyn_saleDeed', label: 'Sale Deed', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_saleDeed_document', label: 'Sale Deed Document', type: 'document', step: 4 },
+  { id: 'dyn_uds', label: 'Undivided Share (UDS)', type: 'text', step: 4, placeholder: 'e.g. 120 Sq. Yd' },
+  { id: 'dyn_ec', label: 'Encumbrance Certificate (EC)', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_ec_document', label: 'EC Certificate', type: 'document', step: 4 },
+  { id: 'dyn_linkDocuments', label: 'Link Documents', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_linkDocuments_document', label: 'Link Document', type: 'document', step: 4 },
+  { id: 'dyn_motherDocument', label: 'Mother Document', type: 'select', step: 4, options: ['Yes', 'No'] },
+  { id: 'dyn_motherDocument_document', label: 'Mother Document Upload', type: 'document', step: 4 },
+];
+
 export const CATEGORY_DYNAMIC_FIELDS = {
   'residential-plots': {
     label: 'Residential Plots',
@@ -144,6 +176,7 @@ export const CATEGORY_DYNAMIC_FIELDS = {
       { id: 'dyn_reraNumber', label: 'RERA Number', type: 'text', step: 4 },
       { id: 'dyn_ownershipType', label: 'Ownership Type', type: 'select', step: 4, options: OWNERSHIP_OPTIONS },
       { id: 'dyn_loanAvailability', label: 'Loan Availability', type: 'checkbox', step: 4 },
+      ...APARTMENT_COMPLIANCE_FIELDS,
       ...SCHEDULE_A_FIELDS,
       ...SCHEDULE_B_FIELDS,
       ...SCHEDULE_C_FIELDS,

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { CATEGORIES } from '../../config/categories';
-import { CITIES } from '../../data/locations';
 import { getActiveHeroSlides } from '../../config/heroSlides';
 import { useLanguageStore } from '../../store/languageStore';
 import { useAuthStore } from '../../store/authStore';
@@ -14,6 +13,7 @@ import { resolvePostPropertyAction } from '../../utils/postPropertyAccess';
 import { settingsService } from '../../services/settingsService';
 import { loadGoogleMapsScript } from '../../utils/googleMaps';
 import { responsiveSrcSet } from '../../utils/imageSrcset';
+import { onIdle } from '../../utils/idle';
 
 function getGoogleString(obj) {
   if (!obj) return '';
@@ -87,7 +87,6 @@ const POPULAR_LOCALITIES = [
 
 const AUTOPLAY_INTERVAL = 3000;
 const SLIDES = getActiveHeroSlides();
-const CURRENT_LOCATION_VALUE = '__current_location__';
 
 export default function HeroCarousel() {
   const { t } = useTranslation(['properties', 'common']);
@@ -108,21 +107,23 @@ export default function HeroCarousel() {
   const [googleSuggestions, setGoogleSuggestions] = useState([]);
   const containerRef = useRef(null);
 
-  // Load custom locations from database
+  // Load custom locations from database (after first render / idle)
   useEffect(() => {
-    settingsService.getPublicSettings()
-      .then((res) => {
-        if (res && res.customLocations) {
-          const cl = res.customLocations;
-          const locs = Array.isArray(cl)
-            ? cl
-            : [...(cl.cities || []), ...(cl.states || [])];
-          setCustomLocs(locs);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load dynamic location settings:', err);
-      });
+    return onIdle(() => {
+      settingsService.getPublicSettings()
+        .then((res) => {
+          if (res && res.customLocations) {
+            const cl = res.customLocations;
+            const locs = Array.isArray(cl)
+              ? cl
+              : [...(cl.cities || []), ...(cl.states || [])];
+            setCustomLocs(locs);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load dynamic location settings:', err);
+        });
+    });
   }, []);
 
   // Close suggestions when clicking outside
@@ -337,24 +338,28 @@ export default function HeroCarousel() {
       onFocusCapture={handleFocusCapture}
       onBlurCapture={handleBlurCapture}
     >
-      {SLIDES.map((s, i) => (
-        <img
-          key={s.id}
-          src={s.image}
-          srcSet={responsiveSrcSet(s.image, [640, 960, 1280, 1600])}
-          sizes="100vw"
-          alt=""
-          aria-hidden={i !== index}
-          loading={i === 0 ? 'eager' : 'lazy'}
-          fetchPriority={i === 0 ? 'high' : 'low'}
-          decoding="async"
-          width={1600}
-          height={620}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
-            prefersReducedMotion ? 'duration-0' : 'duration-700'
-          } ${i === index ? 'opacity-100' : 'opacity-0'}`}
-        />
-      ))}
+      {SLIDES.map((s, i) =>
+        i > index ? (
+          <div key={s.id} aria-hidden="true" className="absolute inset-0" />
+        ) : (
+          <img
+            key={s.id}
+            src={s.image}
+            srcSet={responsiveSrcSet(s.image, [480, 640, 960, 1280, 1600])}
+            sizes="100vw"
+            alt=""
+            aria-hidden={i !== index}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchPriority={i === 0 ? 'high' : 'low'}
+            decoding="async"
+            width={1600}
+            height={620}
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
+              prefersReducedMotion ? 'duration-0' : 'duration-700'
+            } ${i === index ? 'opacity-100' : 'opacity-0'}`}
+          />
+        )
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
 
       <button

@@ -5,7 +5,7 @@
 export const HERO_SLIDES = [
   {
     id: 'slide-1',
-    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=70&fm=webp',
+    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1600&q=60&fm=webp',
     headingEn: 'Find the Right Property. Build Your Future.',
     headingTe: 'సరైన ఆస్తిని కనుగొనండి. మీ భవిష్యత్తును నిర్మించండి.',
     subtitleEn: 'Verified plots, apartments and ventures across Andhra Pradesh and Telangana.',
@@ -14,7 +14,7 @@ export const HERO_SLIDES = [
   },
   {
     id: 'slide-2',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=70&fm=webp',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=60&fm=webp',
     headingEn: 'Verified Listings You Can Trust',
     headingTe: 'మీరు విశ్వసించగల ధృవీకరించబడిన లిస్టింగ్‌లు',
     subtitleEn: 'Every property is reviewed by our team before it goes live.',
@@ -23,7 +23,7 @@ export const HERO_SLIDES = [
   },
   {
     id: 'slide-3',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=70&fm=webp',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=60&fm=webp',
     headingEn: 'Buyers, Sellers and Mediators — Connected',
     headingTe: 'కొనుగోలుదారులు, విక్రేతలు మరియు మధ్యవర్తులు — అనుసంధానించబడ్డారు',
     subtitleEn: 'A transparent marketplace built for every side of a property transaction.',
@@ -32,7 +32,7 @@ export const HERO_SLIDES = [
   },
   {
     id: 'slide-4',
-    image: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?auto=format&fit=crop&w=1600&q=70&fm=webp',
+    image: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?auto=format&fit=crop&w=1600&q=60&fm=webp',
     headingEn: 'Ventures Designed for Tomorrow',
     headingTe: 'రేపటి కోసం రూపొందించిన వెంచర్లు',
     subtitleEn: 'Explore our curated open-plot ventures with clear titles and approvals.',

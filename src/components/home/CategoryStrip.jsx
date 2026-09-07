@@ -7,6 +7,8 @@ import { CATEGORIES } from '../../config/categories';
 import { useLanguageStore } from '../../store/languageStore';
 import { propertyService } from '../../services/propertyService';
 import { resolveMediaUrl } from '../../store/url';
+import { responsiveSrcSet } from '../../utils/imageSrcset';
+import { onIdle } from '../../utils/idle';
 
 export default function CategoryStrip() {
   const { t } = useTranslation('common');
@@ -14,12 +16,14 @@ export default function CategoryStrip() {
   const [counts, setCounts] = useState({});
 
   useEffect(() => {
-    propertyService.getProperties({ pageSize: 1000 }).then(({ items }) => {
-      const tally = {};
-      for (const p of items) {
-        tally[p.categorySlug] = (tally[p.categorySlug] || 0) + 1;
-      }
-      setCounts(tally);
+    return onIdle(() => {
+      propertyService.getProperties({ pageSize: 1000 }).then(({ items }) => {
+        const tally = {};
+        for (const p of items) {
+          tally[p.categorySlug] = (tally[p.categorySlug] || 0) + 1;
+        }
+        setCounts(tally);
+      });
     });
   }, []);
 
@@ -40,6 +44,8 @@ export default function CategoryStrip() {
                   <>
                     <img
                       src={resolveMediaUrl(cat.image)}
+                      srcSet={cat.image ? responsiveSrcSet(cat.image, [96, 128, 192]) : undefined}
+                      sizes="64px"
                       alt=""
                       width={64}
                       height={64}

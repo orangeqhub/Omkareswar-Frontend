@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { TrendingUp, Award, Calendar, Users, Phone, CheckCircle2, AlertTriangle, UserCheck } from 'lucide-react';
+import { TrendingUp, Award, Phone, CheckCircle2, AlertTriangle } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { userService } from '../../services/userService';
 import { toast } from '../../store/toastStore';
@@ -16,7 +15,6 @@ const RANGE_OPTIONS = [
 ];
 
 export default function Performance() {
-  const { t } = useTranslation(['dashboard', 'common']);
   const [employees, setEmployees] = useState([]);
   const [performanceData, setPerformanceData] = useState([]);
   const [loading, setLoading] = useState(false);
