@@ -30,7 +30,13 @@ function Counter({ label, value, onChange, id, icon: Icon }) {
   );
 }
 
-function lb(id, def, fc) { return fc[id]?.label || def; }
+function lb(id, def, fc) {
+  if (fc[id]?.label) return fc[id].label;
+  for (const k of Object.keys(DYNAMIC_DUPLICATES)) {
+    if (DYNAMIC_DUPLICATES[k] === id && fc[k]?.label) return fc[k].label;
+  }
+  return def;
+}
 
 // Reorders a field list so that every field matching `movePred` sits directly
 // after the field matching `anchorPred` (e.g. Land Conversion after Approval
@@ -138,7 +144,11 @@ export default function Step4Structure({ data, onChange, fieldConfig = {}, prope
     })
     .map((f) => {
       const cfg = fieldConfig[f.id];
-      return cfg && Array.isArray(cfg.options) && cfg.options.length > 0 ? { ...f, options: cfg.options } : f;
+      const next = { ...f };
+      if (cfg && cfg.label) next.label = cfg.label;
+      if (cfg && cfg.placeholder) next.placeholder = cfg.placeholder;
+      if (cfg && Array.isArray(cfg.options) && cfg.options.length > 0) next.options = cfg.options;
+      return next;
     });
 
   const approvalField = enabledCatFields.find((f) => /approval/i.test(f.id));
@@ -204,17 +214,17 @@ export default function Step4Structure({ data, onChange, fieldConfig = {}, prope
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="wz-floors" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.floors')}</label>
+              <label htmlFor="wz-floors" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('floors', t('wizard.floors'), fieldConfig)}</label>
               <input id="wz-floors" type="number" min="0" value={data.structure?.floors || ''} onChange={(e) => updateStructure({ floors: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder={g('Total floors in building')} />
             </div>
             <div>
-              <label htmlFor="wz-propfloor" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.propertyFloor')}</label>
+              <label htmlFor="wz-propfloor" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('propertyFloor', t('wizard.propertyFloor'), fieldConfig)}</label>
               <input id="wz-propfloor" type="number" min="0" value={data.structure?.propertyFloor || ''} onChange={(e) => updateStructure({ propertyFloor: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder={g('Floor number of this property')} />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="wz-furnishing" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.furnishing')}</label>
+              <label htmlFor="wz-furnishing" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('furnishing', t('wizard.furnishing'), fieldConfig)}</label>
               <select id="wz-furnishing" value={data.structure?.furnishing || 'unfurnished'} onChange={(e) => updateStructure({ furnishing: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors">
                 <option value="unfurnished">{g('Unfurnished')}</option>
                 <option value="semi">{g('Semi-furnished')}</option>
@@ -222,7 +232,7 @@ export default function Step4Structure({ data, onChange, fieldConfig = {}, prope
               </select>
             </div>
             <div>
-              <label htmlFor="wz-parking" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.parking')}</label>
+              <label htmlFor="wz-parking" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('parking', t('wizard.parking'), fieldConfig)}</label>
               {data.categorySlug === 'apartments' ? (
                 <select id="wz-parking" value={data.structure?.parking || ''} onChange={(e) => updateStructure({ parking: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors">
                   <option value="">{g('Select...')}</option>
@@ -236,7 +246,7 @@ export default function Step4Structure({ data, onChange, fieldConfig = {}, prope
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="wz-age" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.ageOfProperty')}</label>
+              <label htmlFor="wz-age" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('ageOfProperty', t('wizard.ageOfProperty'), fieldConfig)}</label>
               <input id="wz-age" value={data.structure?.ageOfProperty || ''} onChange={(e) => updateStructure({ ageOfProperty: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder={g('e.g. New / 2 years old')} />
             </div>
           </div>
@@ -282,21 +292,21 @@ export default function Step4Structure({ data, onChange, fieldConfig = {}, prope
         <div className="border-l-4 border-brand-650 pl-3"><h4 className="text-xs font-bold text-brand-800 uppercase tracking-wider">{building || hasDynamicSection ? g('3. Dimensions & Borders (Optional)') : g('2. Dimensions & Borders (Optional)')}</h4></div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="wz-plotlength" className="mb-1.5 block text-xs font-semibold text-gray-700">{LAND_DIMENSION_CATEGORIES.includes(data.categorySlug) ? g('Land Length') : t('wizard.plotLength')}</label>
+            <label htmlFor="wz-plotlength" className="mb-1.5 block text-xs font-semibold text-gray-700">{LAND_DIMENSION_CATEGORIES.includes(data.categorySlug) ? lb('plotLength', g('Land Length'), fieldConfig) : lb('plotLength', t('wizard.plotLength'), fieldConfig)}</label>
             <input id="wz-plotlength" value={data.plotDetails?.plotLength || ''} onChange={(e) => updatePlot({ plotLength: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder="e.g. 50 ft" />
           </div>
           <div>
-            <label htmlFor="wz-plotwidth" className="mb-1.5 block text-xs font-semibold text-gray-700">{LAND_DIMENSION_CATEGORIES.includes(data.categorySlug) ? g('Land Width') : t('wizard.plotWidth')}</label>
+            <label htmlFor="wz-plotwidth" className="mb-1.5 block text-xs font-semibold text-gray-700">{LAND_DIMENSION_CATEGORIES.includes(data.categorySlug) ? lb('plotWidth', g('Land Width'), fieldConfig) : lb('plotWidth', t('wizard.plotWidth'), fieldConfig)}</label>
             <input id="wz-plotwidth" value={data.plotDetails?.plotWidth || ''} onChange={(e) => updatePlot({ plotWidth: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder="e.g. 40 ft" />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="wz-roadwidth" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.roadWidth')}</label>
+            <label htmlFor="wz-roadwidth" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('roadWidth', t('wizard.roadWidth'), fieldConfig)}</label>
             <input id="wz-roadwidth" value={data.plotDetails?.roadWidth || ''} onChange={(e) => updatePlot({ roadWidth: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder="e.g. 30 ft" />
           </div>
           <div>
-            <label htmlFor="wz-boundary" className="mb-1.5 block text-xs font-semibold text-gray-700">{t('wizard.boundary')}</label>
+            <label htmlFor="wz-boundary" className="mb-1.5 block text-xs font-semibold text-gray-700">{lb('boundary', t('wizard.boundary'), fieldConfig)}</label>
             <input id="wz-boundary" value={data.plotDetails?.boundary || ''} onChange={(e) => updatePlot({ boundary: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500/25 focus:outline-none transition-colors" placeholder={g('e.g. Fencing / Compound wall')} />
           </div>
         </div>

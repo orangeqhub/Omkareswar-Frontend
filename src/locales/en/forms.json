@@ -52,7 +52,7 @@
     "mobile": "Registered Mobile Number",
     "requestOtp": "Send OTP",
     "otpLabel": "Enter OTP",
-    "otpHint": "Demo OTP flow — enter any 4-6 digit code.",
+    "otpHint": "Enter the OTP sent to your mobile number.",
     "login": "Login",
     "noAccount": "Don't have an account?",
     "createAccount": "Create New Account"

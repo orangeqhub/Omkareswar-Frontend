@@ -19,6 +19,15 @@ export function hasPermission(user, permission) {
 }
 
 /**
+ * Property owner contact (contactName/contactPhone) ni only admin, manager
+ * and employee roles choodagalaru. Regular users (sellers, buyers,
+ * mediators) and the public hide unnaru.
+ */
+export function canViewPropertyContact(user) {
+  return Boolean(user && ['admin', 'manager', 'employee'].includes(user.role));
+}
+
+/**
  * Employee/Admin protected operations mundu ee function call chestaru.
  *
  * Admin:

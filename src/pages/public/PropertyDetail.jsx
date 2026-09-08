@@ -43,6 +43,7 @@ import { useCompareStore } from '../../store/compareStore';
 import { useLanguageStore } from '../../store/languageStore';
 import { getLocalizedField, getPublicAddress } from '../../utils/localize';
 import { isBuildingType } from '../../utils/wizardDefaults';
+import { canViewPropertyContact } from '../../utils/permissions';
 import { buildTelLink, buildWhatsAppLink } from '../../utils/contactLinks';
 import { toast } from '../../store/toastStore';
 import ImageGallery from '../../components/properties/ImageGallery';
@@ -177,6 +178,7 @@ export default function PropertyDetail() {
   const { t } = useTranslation('properties');
   const language = useLanguageStore((s) => s.language);
   const { user } = useAuthStore();
+  const canViewContact = canViewPropertyContact(user);
   const isFavourite = useFavouritesStore((s) => s.isFavourite(propertyId));
   const toggleFavourite = useFavouritesStore((s) => s.toggle);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(propertyId));
@@ -990,32 +992,36 @@ export default function PropertyDetail() {
 
         <aside className="hidden lg:block">
           <div className="sticky top-20 space-y-3 rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h2 className="font-semibold text-brand-800">
-              {property.sellerId?.startsWith('u-mediator') ? t('detail.contactMediator') : t('detail.contactSeller')}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {cms?.propertyContactPhone 
-                ? (language === 'te' ? 'కార్యాలయ మద్దతు (Office Support)' : 'Office Support') 
-                : property.contactName
-              }
-            </p>
-            <a 
-              href={buildTelLink(cms?.propertyContactPhone || property.contactPhone)} 
-              className="flex items-center justify-center gap-2 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-warm-white hover:bg-brand-700"
-            >
-              <Phone size={16} /> {t('buttons.call', { ns: 'common' })}
-            </a>
-            <a
-              href={buildWhatsAppLink(
-                { ...property, contactPhone: cms?.propertyContactWhatsapp || property.contactPhone },
-                { lang: language }
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-warm-white hover:bg-green-700"
-            >
-              <MessageCircle size={16} /> {t('buttons.whatsapp', { ns: 'common' })}
-            </a>
+            {canViewContact && (
+              <>
+                <h2 className="font-semibold text-brand-800">
+                  {property.sellerId?.startsWith('u-mediator') ? t('detail.contactMediator') : t('detail.contactSeller')}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {cms?.propertyContactPhone
+                    ? (language === 'te' ? 'కార్యాలయ మద్దతు (Office Support)' : 'Office Support')
+                    : property.contactName
+                  }
+                </p>
+                <a
+                  href={buildTelLink(cms?.propertyContactPhone || property.contactPhone)}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-warm-white hover:bg-brand-700"
+                >
+                  <Phone size={16} /> {t('buttons.call', { ns: 'common' })}
+                </a>
+                <a
+                  href={buildWhatsAppLink(
+                    { ...property, contactPhone: cms?.propertyContactWhatsapp || property.contactPhone },
+                    { lang: language }
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-warm-white hover:bg-green-700"
+                >
+                  <MessageCircle size={16} /> {t('buttons.whatsapp', { ns: 'common' })}
+                </a>
+              </>
+            )}
             <button
               type="button"
               onClick={handleExpressInterest}
@@ -1074,23 +1080,27 @@ export default function PropertyDetail() {
       )}
 
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-gray-200 bg-warm-white p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
-        <a 
-          href={buildTelLink(cms?.propertyContactPhone || property.contactPhone)} 
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-warm-white"
-        >
-          <Phone size={16} /> {t('buttons.call', { ns: 'common' })}
-        </a>
-        <a
-          href={buildWhatsAppLink(
-            { ...property, contactPhone: cms?.propertyContactWhatsapp || property.contactPhone },
-            { lang: language }
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-warm-white"
-        >
-          <MessageCircle size={16} /> {t('buttons.whatsapp', { ns: 'common' })}
-        </a>
+        {canViewContact && (
+          <>
+            <a
+              href={buildTelLink(cms?.propertyContactPhone || property.contactPhone)}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-warm-white"
+            >
+              <Phone size={16} /> {t('buttons.call', { ns: 'common' })}
+            </a>
+            <a
+              href={buildWhatsAppLink(
+                { ...property, contactPhone: cms?.propertyContactWhatsapp || property.contactPhone },
+                { lang: language }
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-warm-white"
+            >
+              <MessageCircle size={16} /> {t('buttons.whatsapp', { ns: 'common' })}
+            </a>
+          </>
+        )}
         <button
           type="button"
           onClick={handleExpressInterest}

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Phone, MessageCircle, Heart, MapPin, BadgeCheck, Star, Ruler, Scale, Home } from 'lucide-react';
 import { useLanguageStore } from '../../store/languageStore';
+import { useAuthStore } from '../../store/authStore';
+import { canViewPropertyContact } from '../../utils/permissions';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCompareStore } from '../../store/compareStore';
 import { getLocalizedField, getPublicAddress } from '../../utils/localize';
@@ -18,6 +20,8 @@ function formatPrice(property) {
 export default function PropertyCard({ property }) {
   const { t } = useTranslation('properties');
   const language = useLanguageStore((s) => s.language);
+  const { user } = useAuthStore();
+  const canViewContact = canViewPropertyContact(user);
   const isWishlisted = useWishlistStore((s) => s.isWishlisted(property.id));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
   const wishlistCount = useWishlistStore((s) => s.ids.length);
@@ -124,22 +128,24 @@ export default function PropertyCard({ property }) {
         </div>
 
         <div className="mt-3 shrink-0">
-          <div className="grid grid-cols-2 gap-2">
-            <a
-              href={buildTelLink(property.contactPhone)}
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-warm-white hover:bg-brand-700"
-            >
-              <Phone size={15} /> {t('buttons.call', { ns: 'common' })}
-            </a>
-            <a
-              href={buildWhatsAppLink(property, { lang: language })}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 py-2 text-sm font-semibold text-warm-white hover:bg-green-700"
-            >
-              <MessageCircle size={15} /> {t('buttons.whatsapp', { ns: 'common' })}
-            </a>
-          </div>
+          {canViewContact && (
+            <div className="grid grid-cols-2 gap-2">
+              <a
+                href={buildTelLink(property.contactPhone)}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2 text-sm font-semibold text-warm-white hover:bg-brand-700"
+              >
+                <Phone size={15} /> {t('buttons.call', { ns: 'common' })}
+              </a>
+              <a
+                href={buildWhatsAppLink(property, { lang: language })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 py-2 text-sm font-semibold text-warm-white hover:bg-green-700"
+              >
+                <MessageCircle size={15} /> {t('buttons.whatsapp', { ns: 'common' })}
+              </a>
+            </div>
+          )}
           <Link
             to={`/properties/${property.id}`}
             className="mt-2 block rounded-lg border border-brand-300 py-2 text-center text-sm font-medium text-brand-700 hover:bg-brand-50"
