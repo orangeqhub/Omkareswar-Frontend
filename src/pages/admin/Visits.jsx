@@ -139,7 +139,10 @@ export default function Visits() {
               {filtered.map((v) => (
                 <tr key={v.id}>
                   <td className="px-4 py-3 font-medium text-gray-800">{v.buyerName || v.buyerMobile || v.buyerId || 'Buyer'}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600">{v.propertyTitle || v.propertyId}</td>
+                  <td className="px-4 py-3">
+                    <p className="text-xs font-semibold text-gray-700">{v.property?.propertyCode || v.propertyId}</p>
+                    {v.property?.titleEn && <p className="text-[11px] text-gray-400">{v.property.titleEn}</p>}
+                  </td>
                   <td className="px-4 py-3 font-semibold text-brand-700">{v.scheduledFor ? new Date(v.scheduledFor).toLocaleString() : '-'}</td>
                   <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
                   <td className="px-4 py-3">

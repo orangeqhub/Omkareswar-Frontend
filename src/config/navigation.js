@@ -61,6 +61,7 @@ export const DASHBOARD_NAV = {
     { key: 'dashboard', path: '/admin/dashboard', labelKey: 'nav.dashboard', icon: 'LayoutDashboard' },
     { key: 'registrations', path: '/admin/registrations', labelKey: 'nav.registrations', icon: 'UserPlus' },
     { key: 'users', path: '/admin/users', labelKey: 'nav.users', icon: 'Users' },
+    { key: 'popup-page', path: '/admin/popup-page', labelKey: 'nav.popupPage', icon: 'Send' },
     { key: 'employees', path: '/admin/employees', labelKey: 'nav.employees', icon: 'IdCard' },
     { key: 'managers', path: '/admin/managers', labelKey: 'nav.managers', icon: 'UserCog' },
     { key: 'assignments', path: '/admin/assignments', labelKey: 'nav.assignments', icon: 'Briefcase' },

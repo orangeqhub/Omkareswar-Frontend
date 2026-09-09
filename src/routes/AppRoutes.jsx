@@ -100,6 +100,7 @@ const AdminSettings = lazy(() => import('../pages/admin/Settings'));
 const AdminLocations = lazy(() => import('../pages/admin/Locations'));
 const AdminPropertyFields = lazy(() => import('../pages/admin/PropertyFields'));
 const AdminRegistrationForms = lazy(() => import('../pages/admin/RegistrationForms'));
+const AdminPopupLeads = lazy(() => import('../pages/admin/PopupLeads'));
 const AdminEditProperty = lazy(() => import('../pages/seller/EditProperty'));
 
 const ManagerHome = lazy(() => import('../pages/manager/Home'));
@@ -118,8 +119,10 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/properties" element={<PropertyListing />} />
           <Route path="/properties/category/:categorySlug" element={<PropertyListing />} />
           <Route path="/properties/:propertyId" element={<PropertyDetail />} />
@@ -315,6 +318,7 @@ export default function AppRoutes() {
           <Route path="locations" element={<AdminLocations />} />
           <Route path="property-fields" element={<AdminPropertyFields />} />
           <Route path="registration-forms" element={<AdminRegistrationForms />} />
+          <Route path="popup-page" element={<AdminPopupLeads />} />
         </Route>
 
         <Route path="/unauthorized" element={<Unauthorized />} />

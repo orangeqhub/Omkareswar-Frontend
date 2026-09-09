@@ -3,6 +3,7 @@ import HeroCarousel from '../../components/home/HeroCarousel';
 import CategoryStrip from '../../components/home/CategoryStrip';
 import TrustStrip from '../../components/home/TrustStrip';
 import PropertySectionGrid from '../../components/home/PropertySectionGrid';
+import PopupGate from '../../components/home/PopupGate';
 import { PropertyCardSkeleton } from '../../components/common/Skeleton';
 import { propertyService } from '../../services/propertyService';
 import { useLocationStore } from '../../store/locationStore';
@@ -41,6 +42,7 @@ export default function Home() {
 
   return (
     <>
+      <PopupGate />
       <HeroCarousel />
       <CategoryStrip />
       <TrustStrip />
