@@ -156,6 +156,37 @@ export default function PopupGate() {
           </button>
         )}
 
+        <div className="relative block md:hidden">
+            {posterUrl ? (
+              <img
+                src={posterUrl}
+                alt="Omkareswar Realtors offer"
+                loading="eager"
+                decoding="async"
+                className="aspect-[3/5] w-full object-cover object-top sm:aspect-[3/4]"
+                onError={(ev) => {
+                  ev.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="flex aspect-[3/5] w-full items-center justify-center bg-[#eaf4f6] sm:aspect-[3/4]">
+                <div className="flex flex-col items-center gap-2.5">
+                  <img
+                    src="/logo.png"
+                    alt="Omkareswar Realtors"
+                    className="h-12 w-12 rounded-full object-contain opacity-80"
+                    onError={(ev) => {
+                      ev.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0a6d50]">
+                    Omkareswar Realtors
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
         <div className="grid md:grid-cols-[1fr_1.25fr]">
           <section className="relative hidden min-h-[420px] overflow-hidden bg-[#eaf4f6] md:block sm:min-h-[460px]">
             {posterUrl ? (
