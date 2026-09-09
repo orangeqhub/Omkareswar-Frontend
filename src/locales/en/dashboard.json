@@ -627,6 +627,14 @@
     "socialInstagram": "Instagram Profile URL",
     "socialTwitter": "X / Twitter URL",
     "socialYoutube": "YouTube Channel URL",
+    "popupPosterImage": "Lead Popup Poster Image (Left Side)",
+    "popupPosterHint": "Recommended: a portrait poster 600 x 1000 px (3:5). The left side of the lead popup shows only this image.",
+    "uploadPoster": "Click to upload poster image",
+    "replacePoster": "Replace Image",
+    "removePoster": "Remove Image",
+    "posterUploading": "Uploading poster image...",
+    "posterUploaded": "Poster image uploaded!",
+    "posterUploadFailed": "Failed to upload poster image.",
     "saveContent": "Save Content"
   },
   "export": {
